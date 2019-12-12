@@ -22,4 +22,5 @@
     <string name="search">Search</string>
     <string name="search_txt">Search...</string>
     <string name="welcome_to_wetalk">Welcome To WeTalk</string>
+    <string name="continue_btn">Continue</string>
 </resources>

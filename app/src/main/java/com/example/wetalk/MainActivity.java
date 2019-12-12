@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize() {
-        FirebaseApp.initializeApp(this);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
