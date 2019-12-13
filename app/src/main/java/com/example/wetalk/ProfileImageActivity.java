@@ -18,8 +18,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityOptionsCompat;
-import androidx.core.view.ViewCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -66,18 +64,6 @@ public class ProfileImageActivity extends AppCompatActivity {
         mImage2 = findViewById(R.id.circle_shred_profile_image);
         userProfileImageRef = FirebaseStorage.getInstance().getReference().child("Profile Images");
 
-        retrieveUserProfilePic();
-
-        mToolbar = findViewById(R.id.shared_toolbar);
-        setSupportActionBar(mToolbar);
-
-        loadingBar = new ProgressDialog(this);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        mToolbar.setNavigationOnClickListener(v -> sendUserToSettingsActivity());
-
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
         fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
@@ -89,6 +75,18 @@ public class ProfileImageActivity extends AppCompatActivity {
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
+
+        retrieveUserProfilePic();
+
+        mToolbar = findViewById(R.id.shared_toolbar);
+        setSupportActionBar(mToolbar);
+
+        loadingBar = new ProgressDialog(this);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        mToolbar.setNavigationOnClickListener(v -> sendUserToSettingsActivity());
     }
 
     private void retrieveUserProfilePic() {
@@ -189,12 +187,10 @@ public class ProfileImageActivity extends AppCompatActivity {
         }
     }
 
-
     private void sendUserToSettingsActivity() {
-        Intent profileIntent = new Intent(ProfileImageActivity.this, SettingsActivity.class);
-        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(ProfileImageActivity.this, mImage, ViewCompat.getTransitionName(mImage));
         mImage.setVisibility(INVISIBLE);
         mImage2.setVisibility(VISIBLE);
-        startActivity(profileIntent, optionsCompat.toBundle());
+        finishAfterTransition();
     }
+
 }

@@ -52,17 +52,8 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
+        getWindow().setEnterTransition(null);
+        getWindow().setExitTransition(null);
 
         mAuth = FirebaseAuth.getInstance();
         currentUserId = mAuth.getCurrentUser().getUid();
@@ -83,12 +74,27 @@ public class SettingsActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
 
         getSupportActionBar().setTitle("Profile");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        if (!getIntent().getBooleanExtra("FLAG", false)){
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
 
         mToolbar.setNavigationOnClickListener(v -> sendUserToMainActivity());
 
         updateProfileBtn.setOnClickListener(v -> updateSettings());
+
+        Fade fade = new Fade();
+        View decor = getWindow().getDecorView();
+        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
+        fade.excludeTarget(android.R.id.statusBarBackground,true);
+        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+
+        getWindow().setEnterTransition(fade);
+        getWindow().setExitTransition(fade);
 
         mUserProfileImage.setOnClickListener(v -> {
             Intent profileIntent = new Intent(SettingsActivity.this, ProfileImageActivity.class);
@@ -96,6 +102,8 @@ public class SettingsActivity extends AppCompatActivity {
             mUserProfileImage.setVisibility(View.INVISIBLE);
             mUserProfileImage2.setVisibility(View.VISIBLE);
             startActivity(profileIntent, optionsCompat.toBundle());
+            mUserProfileImage.setVisibility(View.VISIBLE);
+            mUserProfileImage2.setVisibility(View.INVISIBLE);
         });
     }
 
@@ -165,6 +173,8 @@ public class SettingsActivity extends AppCompatActivity {
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             Toast.makeText(SettingsActivity.this, "Profile updated", Toast.LENGTH_SHORT).show();
+                            if (getIntent().getBooleanExtra("FLAG", false))
+                                sendUserToMainActivity();
                         }
                         else {
                             String message = task.getException().toString();
@@ -178,7 +188,10 @@ public class SettingsActivity extends AppCompatActivity {
         Intent mainIntent = new Intent(SettingsActivity.this, MainActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(mainIntent);
-        overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
+        if (getIntent().getBooleanExtra("FLAG", false))
+            overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
+        else
+            overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
         finish();
     }
 }

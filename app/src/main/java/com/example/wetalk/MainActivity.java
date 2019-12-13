@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,14 +16,10 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -76,11 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
-
-        if (currentUser == null)
-            sendUserToLoginActivity();
-        else
-            verifyUserExistence();
     }
 
     @Override
@@ -98,49 +90,39 @@ public class MainActivity extends AppCompatActivity {
                 sendUserToSettingsActivity();
                 return true;
             case R.id.logout:
-                mAuth.signOut();
-                sendUserToLoginActivity();
+                deleteUserAccount();
                 return true;
             case R.id.new_group:
                 return true;
             case R.id.search:
-                mAppBarLayout.setVisibility(View.INVISIBLE);
-                mSearchToolbar.setVisibility(View.VISIBLE);
-                return true;
+
             default:
                 return super.onContextItemSelected(item);
         }
     }
 
-    private void verifyUserExistence() {
-        String currentUserId = mAuth.getCurrentUser().getUid();
-
-        rootRef.child("Users").child(currentUserId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    if ((!dataSnapshot.child("name").exists()) && (!dataSnapshot.child("status").exists()))
-                        sendUserToSettingsActivity();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
-        });
-    }
-
-    private void sendUserToLoginActivity() {
-        Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
-        loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(loginIntent);
-        overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
-        finish();
+    private void deleteUserAccount() {
+        currentUser.delete()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
+                        sendUserToHelloActivity();
+                    }
+                });
     }
 
     private void sendUserToSettingsActivity() {
         Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
         settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(settingsIntent);
+        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
+        finish();
+    }
+
+    private void sendUserToHelloActivity() {
+        Intent helloIntent = new Intent(MainActivity.this, HelloActivity.class);
+        helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(helloIntent);
         overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
     }

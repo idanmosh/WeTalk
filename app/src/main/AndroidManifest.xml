@@ -16,21 +16,23 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".HelloActivity">
+        <activity android:name=".TransitionActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".HelloActivity"/>
         <activity android:name=".ProfileImageActivity" />
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
+            android:parentActivityName=".SettingsActivity"
             android:theme="@style/Base.Theme.AppCompat" />
         <activity
             android:name=".SettingsActivity"
             android:parentActivityName=".MainActivity" />
-        <activity android:name=".LoginActivity"/>
+        <activity android:name=".LoginActivity" />
         <activity android:name=".MainActivity" />
     </application>
 
