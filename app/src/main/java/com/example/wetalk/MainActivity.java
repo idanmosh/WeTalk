@@ -94,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.new_group:
                 return true;
             case R.id.search:
+                sendUserToFindFriendsActivity();
+
 
             default:
                 return super.onContextItemSelected(item);
@@ -127,5 +129,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(settingsIntent);
         overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
+    }
+    private void sendUserToFindFriendsActivity() {
+        Intent findsFriends = new Intent(MainActivity.this, FindFriendsActivity.class);
+        startActivity(findsFriends);
     }
 }
