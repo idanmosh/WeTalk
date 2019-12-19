@@ -74,11 +74,8 @@ public class SettingsActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
 
         getSupportActionBar().setTitle("Profile");
-
-        if (!getIntent().getBooleanExtra("FLAG", false)){
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-        }
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         mToolbar.setNavigationOnClickListener(v -> sendUserToMainActivity());
 

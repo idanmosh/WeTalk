@@ -1,7 +1,9 @@
 package com.example.wetalk;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.transition.Fade;
 import android.view.View;
 
@@ -19,14 +21,32 @@ import com.google.firebase.database.ValueEventListener;
 
 public class TransitionActivity extends AppCompatActivity {
 
+    private static int WELCOME_TIMEOUT = 1000;
+    private final static String USERS = "Users";
+    private final static String NAME = "name";
+    private final static String STATUS = "status";
+    private static final String MyPREFERENCES = "MyPrefs";
+    private static final String Login_State = "loginState";
+    private static final String Profile_State = "profileState";
+
+
+    private SharedPreferences mSharedPreferences;
+
     private FirebaseUser currentUser;
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
+
+    private boolean mLoginState;
+    private boolean mProfileState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transition);
+
+        mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
+
+        getSharedPreferences();
 
         FirebaseApp.initializeApp(this);
         mAuth = FirebaseAuth.getInstance();
@@ -46,11 +66,20 @@ public class TransitionActivity extends AppCompatActivity {
         getWindow().setExitTransition(fade);
     }
 
+    private void getSharedPreferences() {
+        mLoginState = mSharedPreferences.getBoolean(Login_State, false);
+        mProfileState = mSharedPreferences.getBoolean(Profile_State, false);
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
 
-        if (currentUser != null)
+        if (mLoginState)
+            sendUserToLoginActivity();
+        else if (mProfileState)
+            sendUserToProfileActivity();
+        else if(currentUser != null)
             checkIfUserExist();
         else
             sendUserToHelloActivity();
@@ -59,12 +88,12 @@ public class TransitionActivity extends AppCompatActivity {
     private void checkIfUserExist() {
         String currentUserId = currentUser.getUid();
 
-        rootRef.child("Users").child(currentUserId)
+        rootRef.child(USERS).child(currentUserId)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            if (dataSnapshot.hasChild("name") && dataSnapshot.hasChild("status"))
+                            if (dataSnapshot.hasChild(NAME) && dataSnapshot.hasChild(STATUS))
                                 sendUserToMainActivity();
                             else
                                 sendUserToHelloActivity();
@@ -75,20 +104,43 @@ public class TransitionActivity extends AppCompatActivity {
                 });
     }
 
-    private void sendUserToHelloActivity() {
-        Intent helloIntent = new Intent(TransitionActivity.this, HelloActivity.class);
-        helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(helloIntent);
-        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
-        finish();
+    private void sendUserToProfileActivity() {
+        new Handler().postDelayed(() -> {
+            Intent helloIntent = new Intent(TransitionActivity.this, ProfileActivity.class);
+            helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(helloIntent);
+            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
+            finish();
+        },WELCOME_TIMEOUT);
     }
 
+    private void sendUserToHelloActivity() {
+        new Handler().postDelayed(() -> {
+            Intent helloIntent = new Intent(TransitionActivity.this, HelloActivity.class);
+            helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(helloIntent);
+            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
+            finish();
+        },WELCOME_TIMEOUT);
+    }
+
+    private void sendUserToLoginActivity() {
+        new Handler().postDelayed(() -> {
+            Intent loginIntent = new Intent(TransitionActivity.this, LoginActivity.class);
+            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(loginIntent);
+            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
+            finish();
+        },WELCOME_TIMEOUT);
+    }
 
     private void sendUserToMainActivity() {
-        Intent mainIntent = new Intent(TransitionActivity.this, MainActivity.class);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(mainIntent);
-        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
-        finish();
+        new Handler().postDelayed(() -> {
+            Intent mainIntent = new Intent(TransitionActivity.this, MainActivity.class);
+            mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(mainIntent);
+            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
+            finish();
+        },WELCOME_TIMEOUT);
     }
 }

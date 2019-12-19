@@ -5,7 +5,7 @@
     <string name="chats_fragment">Chats Fragment</string>
     <string name="groups_fragment">Groups Fragment</string>
     <string name="contacts_fragment">Contacts Fragment</string>
-    <string name="enter_phone_number">Enter Phone Number</string>
+    <string name="phone_number">Phone Number</string>
     <string name="send_verification_code">Send Verification Code</string>
     <string name="enter_verification_code">Enter Verification Code</string>
     <string name="verify_code">Verify Code</string>
@@ -23,4 +23,9 @@
     <string name="search_txt">Search...</string>
     <string name="welcome_to_wetalk">Welcome To WeTalk</string>
     <string name="continue_btn">Continue</string>
+    <string name="wetalk_will_send_you_sms_message_to_verify_your_phone_number">WeTalk will send you SMS message to verify your phone number.</string>
+    <string name="enter_your_phone_number">Enter your phone number</string>
+    <string name="profile_information">Profile information</string>
+    <string name="attach_a_profile_picture_optional_and_type_your_name">Attach a profile picture (optional) and type your name</string>
+    <string name="next">next</string>
 </resources>

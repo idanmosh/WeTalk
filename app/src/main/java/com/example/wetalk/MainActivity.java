@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -23,11 +22,13 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final static String TITLE = "WeTalk";
+    private final static String USERS = "Users";
+
     private Toolbar mToolbar, mSearchToolbar;
     private ViewPager mViewPager;
     private TabLayout mTabLayout;
     private TabsAccessorAdapter mTabsAccessorAdapter;
-    AppBarLayout mAppBarLayout;
 
     private FirebaseUser currentUser;
     private FirebaseAuth mAuth;
@@ -46,14 +47,12 @@ public class MainActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
 
-        mAppBarLayout = findViewById(R.id.AppBarLayout);
-
         mToolbar = findViewById(R.id.main_page_toolbar);
         mSearchToolbar = findViewById(R.id.search_page_toolbar);
         setSupportActionBar(mSearchToolbar);
         setSupportActionBar(mToolbar);
 
-        getSupportActionBar().setTitle("WeTalk");
+        getSupportActionBar().setTitle(TITLE);
 
         mViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -102,27 +101,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteUserAccount() {
-        currentUser.delete()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
-                        sendUserToHelloActivity();
-                    }
-                });
+        if (currentUser != null) {
+            rootRef.child(USERS).child(currentUser.getUid()).removeValue();
+            currentUser.delete()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
+                            sendUserToTransitionActivity();
+                        }
+                    });
+        }
+    }
+
+    private void sendUserToTransitionActivity() {
+        Intent transitionIntent = new Intent(MainActivity.this, TransitionActivity.class);
+        transitionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(transitionIntent);
+        overridePendingTransition(new Fade().getMode(), new Fade().getMode());
+        finish();
     }
 
     private void sendUserToSettingsActivity() {
         Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
         settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(settingsIntent);
-        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
-        finish();
-    }
-
-    private void sendUserToHelloActivity() {
-        Intent helloIntent = new Intent(MainActivity.this, HelloActivity.class);
-        helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(helloIntent);
         overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
     }
