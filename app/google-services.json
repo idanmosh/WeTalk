@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "253581180708-tarq9kp100d4vm76arfor5g9pnj3iced.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.wetalk",
+            "certificate_hash": "62edca801894447b9de575382d6538e26d07c9bc"
+          }
+        },
+        {
           "client_id": "253581180708-3ovjn1jgbce1mg83brsf6eisto0duvqn.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
