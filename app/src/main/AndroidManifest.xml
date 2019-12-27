@@ -16,8 +16,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".FindFriendsActivity"
-            android:parentActivityName=".MainActivity"></activity>
+        <activity android:name=".ChatActivity"></activity>
+        <activity
+            android:name=".FindFriendsActivity"
+            android:parentActivityName=".MainActivity" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".TransitionActivity">
             <intent-filter>
