@@ -15,7 +15,6 @@
     <string name="new_broadcast">New broadcast</string>
     <string name="user_name">user name</string>
     <string name="status">status</string>
-    <string name="logout">Logout</string>
     <string name="update">update</string>
     <string name="edit_profile_pic_item">edit_profile_pic_item</string>
     <string name="settings_back">settings_back</string>
@@ -28,4 +27,21 @@
     <string name="profile_information">Profile information</string>
     <string name="attach_a_profile_picture_optional_and_type_your_name">Attach a profile picture (optional) and type your name</string>
     <string name="next">next</string>
+    <string name="decline">Decline</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="USERS">Users</string>
+    <string name="IMAGE">image</string>
+    <string name="NAME">name</string>
+    <string name="PHONE">phone</string>
+    <string name="UPDATE_MESSAGE">Please set and update profile information...</string>
+    <string name="ERROR">Error :</string>
+    <string name="PROFILE_UPDATED">Profile updated</string>
+    <string name="STATUS">status</string>
+    <string name="USER_NAME_MISSING">User name is missing...</string>
+    <string name="STATUS_MISSING">Status is missing...</string>
+    <string name="JPG">.jpg</string>
+    <string name="SET_PROFILE_IMAGE">Set Profile Image</string>
+    <string name="PLEASE_WAIT_PROFILE_UPDATED">Please wait, your profile image is updating...</string>
+    <string name="PROFILE_IMAGE_UPLOADED_SUCCESS">Profile image uploaded successfully...</string>
+    <string name="PROFILE_IMAGES">Profile Images</string>
 </resources>

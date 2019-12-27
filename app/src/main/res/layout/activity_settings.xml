@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SettingsActivity">
+    tools:context=".Settings.SettingsActivity">
 
     <include
         android:id="@+id/main_page_toolbar"
@@ -37,6 +37,15 @@
             android:src="@drawable/profile_image"
             android:transitionName="shared_profile_image" />
 
+        <ProgressBar
+            android:id="@+id/profile_progressbar"
+            android:layout_width="120dp"
+            android:indeterminateTint="@android:color/black"
+            android:layout_height="120dp"
+            android:visibility="gone"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="40dp"/>
+
         <EditText
             android:id="@+id/set_user_name"
             android:layout_width="match_parent"
@@ -44,7 +53,7 @@
             android:layout_below="@id/profile_image"
             android:inputType="textMultiLine"
             android:hint="@string/user_name"
-            android:drawableEnd="@drawable/user"
+            android:drawableStart="@drawable/user"
             android:drawablePadding="15dp"
             android:textColor="@color/textColor"
             android:textStyle="bold"
@@ -60,7 +69,7 @@
             android:layout_below="@id/set_user_name"
             android:inputType="textMultiLine"
             android:hint="@string/status"
-            android:drawableEnd="@drawable/information"
+            android:drawableStart="@drawable/information"
             android:drawablePadding="15dp"
             android:textColor="@color/textColor"
             android:textStyle="bold"
@@ -76,8 +85,8 @@
             android:layout_below="@id/set_user_status"
             android:visibility="invisible"
             android:textSize="20sp"
-            android:textAlignment="textEnd"
-            android:drawableEnd="@drawable/telephone"
+            android:textAlignment="textStart"
+            android:drawableStart="@drawable/telephone"
             android:drawablePadding="15dp"
             android:textColor="@color/textColor"
             android:textStyle="normal"

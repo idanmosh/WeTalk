@@ -6,8 +6,7 @@
         android:id="@+id/search"
         android:icon="@drawable/ic_search"
         android:title="@string/search_item"
-        app:showAsAction="ifRoom|collapseActionView"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"/>
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/settings"
@@ -26,7 +25,7 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/logout"
-        android:title="@string/logout"
+        android:id="@+id/delete_account"
+        android:title="@string/delete_account"
         app:showAsAction="never" />
 </menu>

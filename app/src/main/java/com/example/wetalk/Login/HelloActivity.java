@@ -1,4 +1,4 @@
-package com.example.wetalk;
+package com.example.wetalk.Login;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +7,9 @@ import android.view.View;
 import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.wetalk.Classes.FadeClass;
+import com.example.wetalk.R;
 
 public class HelloActivity extends AppCompatActivity {
 
@@ -23,12 +26,8 @@ public class HelloActivity extends AppCompatActivity {
 
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+        FadeClass fadeClass = new FadeClass(decor);
+        fadeClass.initFade();
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);

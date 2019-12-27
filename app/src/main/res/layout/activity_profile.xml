@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ProfileActivity">
+    tools:context=".Login.ProfileActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/profile_toolbar"
@@ -69,7 +69,7 @@
             android:inputType="textMultiLine"
             android:hint="@string/user_name"
             android:focusable="true"
-            android:drawableEnd="@drawable/user"
+            android:drawableStart="@drawable/user"
             android:drawablePadding="15dp"
             android:textColor="@color/textColor"
             android:textStyle="bold"
@@ -85,7 +85,7 @@
             android:layout_below="@id/set_user_name"
             android:inputType="textMultiLine"
             android:hint="@string/status"
-            android:drawableEnd="@drawable/information"
+            android:drawableStart="@drawable/information"
             android:drawablePadding="15dp"
             android:textColor="@color/textColor"
             android:textStyle="bold"

@@ -14,14 +14,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
+import com.example.wetalk.Classes.FadeClass;
+import com.example.wetalk.Settings.SettingsActivity;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final static String PROFILE_IMAGE = "Profile Images";
     private final static String TITLE = "WeTalk";
     private final static String USERS = "Users";
 
@@ -32,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseUser currentUser;
     private FirebaseAuth mAuth;
+    private StorageReference userProfileImageRef;
     private DatabaseReference rootRef;
 
     @Override
@@ -46,13 +54,14 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
+        userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         mSearchToolbar = findViewById(R.id.search_page_toolbar);
         setSupportActionBar(mSearchToolbar);
         setSupportActionBar(mToolbar);
 
-        getSupportActionBar().setTitle(TITLE);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(TITLE);
 
         mViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
@@ -63,12 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+        FadeClass fadeClass = new FadeClass(decor);
+        fadeClass.initFade();
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
@@ -88,31 +93,37 @@ public class MainActivity extends AppCompatActivity {
             case R.id.settings:
                 sendUserToSettingsActivity();
                 return true;
-            case R.id.logout:
-                deleteUserAccount();
+            case R.id.delete_account:
+                deleteUserData();
                 return true;
             case R.id.new_group:
                 return true;
             case R.id.search:
                 sendUserToFindFriendsActivity();
-
-
             default:
                 return super.onContextItemSelected(item);
         }
     }
 
-    private void deleteUserAccount() {
+    private void deleteUserData() {
         if (currentUser != null) {
-            rootRef.child(USERS).child(currentUser.getUid()).removeValue();
-            currentUser.delete()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
-                            sendUserToTransitionActivity();
-                        }
-                    });
+            rootRef.child(USERS).child(currentUser.getUid()).removeValue().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    StorageReference filePath = userProfileImageRef.child(currentUser.getUid() + getString(R.string.JPG));
+                    filePath.delete().addOnCompleteListener(task1 -> deleteUserAccount());
+                }
+            });
         }
+    }
+
+    private void deleteUserAccount(){
+        currentUser.delete()
+                .addOnCompleteListener(task2 -> {
+                    if (task2.isSuccessful()) {
+                        Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
+                        sendUserToTransitionActivity();
+                    }
+                });
     }
 
     private void sendUserToTransitionActivity() {

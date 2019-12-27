@@ -10,6 +10,10 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.wetalk.Classes.FadeClass;
+import com.example.wetalk.Login.HelloActivity;
+import com.example.wetalk.Login.LoginActivity;
+import com.example.wetalk.Login.ProfileActivity;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -19,7 +23,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.File;
+
 public class TransitionActivity extends AppCompatActivity {
+
+    File file;
 
     private static int WELCOME_TIMEOUT = 1000;
     private final static String USERS = "Users";
@@ -55,12 +63,8 @@ public class TransitionActivity extends AppCompatActivity {
 
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+        FadeClass fadeClass = new FadeClass(decor);
+        fadeClass.initFade();
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);

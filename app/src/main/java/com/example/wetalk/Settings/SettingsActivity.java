@@ -1,8 +1,9 @@
-package com.example.wetalk;
+package com.example.wetalk.Settings;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.transition.Fade;
 import android.view.View;
@@ -22,6 +23,10 @@ import androidx.core.view.ViewCompat;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.wetalk.Classes.FadeClass;
+import com.example.wetalk.Classes.User;
+import com.example.wetalk.MainActivity;
+import com.example.wetalk.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -30,6 +35,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -41,6 +47,8 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView mUserPhoneNumber;
     private CircleImageView mUserProfileImage;
     private ImageView mUserProfileImage2;
+
+    private Uri profilePic;
 
     private User user;
     private String currentUserId;
@@ -56,7 +64,7 @@ public class SettingsActivity extends AppCompatActivity {
         getWindow().setExitTransition(null);
 
         mAuth = FirebaseAuth.getInstance();
-        currentUserId = mAuth.getCurrentUser().getUid();
+        currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         rootRef = FirebaseDatabase.getInstance().getReference();
 
         mUserProfileImage = findViewById(R.id.profile_image);
@@ -68,12 +76,13 @@ public class SettingsActivity extends AppCompatActivity {
         user = new User();
         retrieveUserInfo();
 
+
         updateProfileBtn = findViewById(R.id.update_profile_btn);
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
 
-        getSupportActionBar().setTitle("Profile");
+        Objects.requireNonNull(getSupportActionBar()).setTitle("Profile");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
@@ -83,60 +92,58 @@ public class SettingsActivity extends AppCompatActivity {
 
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+        FadeClass fadeClass = new FadeClass(decor);
+        fadeClass.initFade();
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
 
-        mUserProfileImage.setOnClickListener(v -> {
-            Intent profileIntent = new Intent(SettingsActivity.this, ProfileImageActivity.class);
-            ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(SettingsActivity.this, mUserProfileImage, ViewCompat.getTransitionName(mUserProfileImage));
-            mUserProfileImage.setVisibility(View.INVISIBLE);
-            mUserProfileImage2.setVisibility(View.VISIBLE);
-            startActivity(profileIntent, optionsCompat.toBundle());
-            mUserProfileImage.setVisibility(View.VISIBLE);
-            mUserProfileImage2.setVisibility(View.INVISIBLE);
+        mUserProfileImage.setOnClickListener(v -> sendUserToProfileImageActivity());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    private void loadImage() {
+        user.setImage(profilePic.toString());
+        Glide.with(getApplicationContext()).asBitmap().load(user.getImage()).into(new CustomTarget<Bitmap>() {
+            @Override
+            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                mUserProfileImage.setImageBitmap(resource);
+                mUserProfileImage2.setImageBitmap(resource);
+            }
+
+            @Override
+            public void onLoadCleared(@Nullable Drawable placeholder) {
+                Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage);
+                Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage2);
+            }
         });
     }
 
     private void retrieveUserInfo() {
-        rootRef.child("Users").child(currentUserId)
+        rootRef.child(getString(R.string.USERS)).child(currentUserId)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            if (dataSnapshot.hasChild("image")) {
-                                user.setImage(dataSnapshot.child("image").getValue().toString());
-                                Glide.with(getApplicationContext()).asBitmap().load(user.getImage()).into(new CustomTarget<Bitmap>() {
-                                    @Override
-                                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                        mUserProfileImage.setImageBitmap(resource);
-                                        mUserProfileImage2.setImageBitmap(resource);
-                                    }
-
-                                    @Override
-                                    public void onLoadCleared(@Nullable Drawable placeholder) {
-                                        Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage);
-                                        Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage2);
-                                    }
-                                });
+                            if (dataSnapshot.hasChild(getString(R.string.IMAGE))) {
+                                profilePic =  Uri.parse(Objects.requireNonNull(dataSnapshot.child(getString(R.string.IMAGE)).getValue()).toString());
+                                loadImage();
                             }
 
-                            if (dataSnapshot.hasChild("name") && dataSnapshot.hasChild("status")) {
-                                user.setName(dataSnapshot.child("name").getValue().toString());
-                                user.setStatus(dataSnapshot.child("status").getValue().toString());
+                            if (dataSnapshot.hasChild(getString(R.string.NAME)) && dataSnapshot.hasChild(getString(R.string.STATUS))) {
+                                user.setName(Objects.requireNonNull(dataSnapshot.child(getString(R.string.NAME)).getValue()).toString());
+                                user.setStatus(Objects.requireNonNull(dataSnapshot.child(getString(R.string.STATUS)).getValue()).toString());
 
                                 mUserStatus.setText(user.getStatus());
                                 mUserName.setText(user.getName());
                             }
 
-                            if (dataSnapshot.hasChild("phone")) {
-                                user.setPhone(dataSnapshot.child("phone").getValue().toString());
+                            if (dataSnapshot.hasChild(getString(R.string.PHONE))) {
+                                user.setPhone(Objects.requireNonNull(dataSnapshot.child(getString(R.string.PHONE)).getValue()).toString());
 
                                 mUserPhoneNumber.setVisibility(View.VISIBLE);
                                 mUserPhoneNumber.setText(user.getPhone());
@@ -144,7 +151,7 @@ public class SettingsActivity extends AppCompatActivity {
 
                         }
                         else
-                            Toast.makeText(SettingsActivity.this, "Please set and update profile information...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SettingsActivity.this, R.string.UPDATE_MESSAGE, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -153,42 +160,48 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateSettings() {
-        String userName = mUserName.getText().toString();
-        String status = mUserStatus.getText().toString();
+        user.setName(mUserName.getText().toString());
+        user.setStatus(mUserStatus.getText().toString());
 
-        if ((userName.isEmpty()) || (userName.equals(""))) {
+        if ((user.getName().isEmpty()) || (user.getName().equals(""))) {
             Toast.makeText(this, "User name is missing...", Toast.LENGTH_SHORT).show();
         }
-        else if ((status.isEmpty()) || (status.equals(""))) {
+        else if ((user.getStatus().isEmpty()) || (user.getStatus().equals(""))) {
             Toast.makeText(this, "Status is missing...", Toast.LENGTH_SHORT).show();
         }
         else {
             HashMap<String, Object> profileMap = new HashMap<>();
-            profileMap.put("name", userName);
-            profileMap.put("status", status);
-            rootRef.child("Users").child(currentUserId).updateChildren(profileMap)
+            profileMap.put(getString(R.string.NAME), user.getName());
+            profileMap.put(getString(R.string.STATUS), user.getStatus());
+            rootRef.child(getString(R.string.USERS)).child(currentUserId).updateChildren(profileMap)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             Toast.makeText(SettingsActivity.this, "Profile updated", Toast.LENGTH_SHORT).show();
-                            if (getIntent().getBooleanExtra("FLAG", false))
-                                sendUserToMainActivity();
                         }
                         else {
-                            String message = task.getException().toString();
+                            String message = Objects.requireNonNull(task.getException()).toString();
                             Toast.makeText(SettingsActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
                         }
                     });
         }
     }
 
+    private void sendUserToProfileImageActivity() {
+        Intent profileIntent = new Intent(SettingsActivity.this, ProfileImageActivity.class);
+        ActivityOptionsCompat optionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(SettingsActivity.this,
+                mUserProfileImage, Objects.requireNonNull(ViewCompat.getTransitionName(mUserProfileImage)));
+        mUserProfileImage.setVisibility(View.INVISIBLE);
+        mUserProfileImage2.setVisibility(View.VISIBLE);
+        startActivity(profileIntent, optionsCompat.toBundle());
+        mUserProfileImage.setVisibility(View.VISIBLE);
+        mUserProfileImage2.setVisibility(View.INVISIBLE);
+    }
+
     private void sendUserToMainActivity() {
         Intent mainIntent = new Intent(SettingsActivity.this, MainActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(mainIntent);
-        if (getIntent().getBooleanExtra("FLAG", false))
-            overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
-        else
-            overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
+        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
     }
 }

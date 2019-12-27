@@ -1,4 +1,4 @@
-package com.example.wetalk;
+package com.example.wetalk.Login;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -16,8 +16,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.wetalk.Classes.FadeClass;
+import com.example.wetalk.R;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DatabaseReference;
@@ -25,6 +28,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.hbb20.CountryCodePicker;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class LoginActivity extends AppCompatActivity {
@@ -44,6 +48,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
+    private FirebaseUser currentUser;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
 
     private CountryCodePicker ccp;
@@ -60,6 +65,10 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        rootRef = FirebaseDatabase.getInstance().getReference();
 
         ccp = findViewById(R.id.ccp);
         ccp.setDefaultCountryUsingNameCode(DEFAULT_COUNTRY);
@@ -81,17 +90,10 @@ public class LoginActivity extends AppCompatActivity {
             mVerifyLayout.setVisibility(View.VISIBLE);
         }
 
-        mAuth = FirebaseAuth.getInstance();
-        rootRef = FirebaseDatabase.getInstance().getReference();
-
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+        FadeClass fadeClass = new FadeClass(decor);
+        fadeClass.initFade();
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
@@ -201,7 +203,7 @@ public class LoginActivity extends AppCompatActivity {
                 mCallbacks);        // OnVerificationStateChangedCallbacks
 
         mVerificationInProgress = true;
-        mTitle.setText("Verify  " + phoneNumber);
+        mTitle.setText(String.format("Verify  %s", phoneNumber));
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
@@ -210,7 +212,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         HashMap<String, Object> loginMap = new HashMap<>();
                         loginMap.put(PHONE, phoneNumber);
-                        String currentUserId = mAuth.getCurrentUser().getUid();
+                        String currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
                         rootRef.child(USERS).child(currentUserId).updateChildren(loginMap)
                                 .addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
@@ -221,12 +223,12 @@ public class LoginActivity extends AppCompatActivity {
                                         sendUserToProfileActivity();
                                     }
                                     else {
-                                        String message = task1.getException().toString();
+                                        String message = Objects.requireNonNull(task1.getException()).toString();
                                         Toast.makeText(LoginActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
                                     }
                                 });
                     } else {
-                        String message = task.getException().toString();
+                        String message = Objects.requireNonNull(task.getException()).toString();
                         Toast.makeText(LoginActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
                         loadingBar.dismiss();
                     }
