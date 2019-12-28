@@ -2,6 +2,7 @@ package com.example.wetalk.Settings;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -27,15 +28,12 @@ import com.example.wetalk.Classes.FadeClass;
 import com.example.wetalk.Classes.User;
 import com.example.wetalk.Permissions.Permissions;
 import com.example.wetalk.R;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -52,9 +50,11 @@ public class ProfileImageActivity extends AppCompatActivity {
     private ImageView mImage;
     private CircleImageView mImage2;
 
+    private SharedPreferences mSharedPreferences;
+    private static final String MyPREFERENCES = "MyPrefs";
+    private static final String IMAGE_KEY = "image_key";
     private Uri resultUri;
 
-    private StorageReference userProfileImageRef;
     private User user;
     private String currentUserId;
     private FirebaseAuth mAuth;
@@ -72,13 +72,13 @@ public class ProfileImageActivity extends AppCompatActivity {
 
         mImage = findViewById(R.id.shared_profile_image);
         mImage2 = findViewById(R.id.circle_shred_profile_image);
-        userProfileImageRef = FirebaseStorage.getInstance().getReference().child(getString(R.string.PROFILE_IMAGES));
 
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
         FadeClass fadeClass = new FadeClass(decor);
         fadeClass.initFade();
 
+        mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         user = new User();
 
         getWindow().setEnterTransition(fade);
@@ -98,55 +98,46 @@ public class ProfileImageActivity extends AppCompatActivity {
     }
 
     private void retrieveUserProfilePic() {
-        rootRef.child(getString(R.string.USERS)).child(currentUserId)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            if (dataSnapshot.hasChild(getString(R.string.IMAGE))) {
-                                user.setImage(Objects.requireNonNull(dataSnapshot.child(getString(R.string.IMAGE)).getValue()).toString());
-                                loadImage();
+        user.setImage(mSharedPreferences.getString(IMAGE_KEY, null));
+
+        if (user.getImage() == null) {
+            rootRef.child(getString(R.string.USERS)).child(currentUserId)
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                if (dataSnapshot.hasChild(getString(R.string.IMAGE))) {
+                                    user.setImage(Objects.requireNonNull(dataSnapshot.child(getString(R.string.IMAGE)).getValue()).toString());
+                                    mSharedPreferences.edit().putString(IMAGE_KEY, user.getImage()).apply();
+                                    loadImage();
+                                }
                             }
                         }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) { }
-                });
-    }
-
-    private void waitImageLoad(int time) {
-        if (time == 1){
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) { }
+                    });
         }
         else {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            loadImage();
         }
-
     }
 
     private void loadImage() {
-        Glide.with(getApplicationContext()).asBitmap().load(user.getImage()).into(new CustomTarget<Bitmap>() {
-            @Override
-            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                mImage.setImageBitmap(resource);
-                mImage2.setImageBitmap(resource);
-            }
+        if (user.getImage() != null) {
+            Glide.with(getApplicationContext()).asBitmap().load(user.getImage()).into(new CustomTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                    mImage.setImageBitmap(resource);
+                    mImage2.setImageBitmap(resource);
+                }
 
-            @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {
-                Glide.with(getApplicationContext()).load(placeholder).into(mImage);
-                Glide.with(getApplicationContext()).load(placeholder).into(mImage2);
-            }
-        });
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {
+                    Glide.with(getApplicationContext()).load(placeholder).into(mImage);
+                    Glide.with(getApplicationContext()).load(placeholder).into(mImage2);
+                }
+            });
+        }
     }
 
     @Override
@@ -161,9 +152,6 @@ public class ProfileImageActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.edit_profile_picture:
                 checkPermissions();
-                return true;
-            case android.R.id.home:
-                saveImageToDB();
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -212,43 +200,13 @@ public class ProfileImageActivity extends AppCompatActivity {
                 loadingBar.show();
 
                 resultUri = Objects.requireNonNull(result).getUri();
+                mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
                 user.setImage(resultUri.toString());
                 loadImage();
                 loadingBar.dismiss();
                 Toast.makeText(ProfileImageActivity.this, R.string.PROFILE_IMAGE_UPLOADED_SUCCESS, Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    private void saveImageToDB(){
-        StorageReference filePath = userProfileImageRef.child(currentUserId + getString(R.string.JPG));
-
-        filePath.putFile(resultUri).addOnSuccessListener(taskSnapshot -> {
-            if (taskSnapshot.getMetadata() != null) {
-                Task<Uri> result1 = taskSnapshot.getStorage().getDownloadUrl();
-
-                result1.addOnSuccessListener(uri -> {
-                    String imageUrl = uri.toString();
-                    rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(imageUrl)
-                            .addOnCompleteListener(task -> {});
-                });
-            }
-            else {
-                String message = Objects.requireNonNull(taskSnapshot.getError()).toString();
-                Toast.makeText(ProfileImageActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
-                loadingBar.dismiss();
-            }
-        });
     }
 
     private void sendUserToSettingsActivity() {

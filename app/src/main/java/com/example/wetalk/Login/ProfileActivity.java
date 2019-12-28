@@ -1,5 +1,6 @@
 package com.example.wetalk.Login;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -21,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.wetalk.Classes.AppDir;
 import com.example.wetalk.Classes.FadeClass;
 import com.example.wetalk.Classes.User;
 import com.example.wetalk.MainActivity;
@@ -38,14 +40,11 @@ import com.google.firebase.storage.StorageReference;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.util.HashMap;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileActivity extends AppCompatActivity {
-
-    private static final int PROFILE_REQUEST_CODE = 100;
 
     private EditText mUserName, mUserStatus;
     private CircleImageView mUserProfileImage;
@@ -58,9 +57,13 @@ public class ProfileActivity extends AppCompatActivity {
     private static final String IMAGE_KEY = "image_key";
     private static final String STATUS_KEY = "status_key";
     private static final String Profile_State = "profileState";
+    private static final String Main_State = "mainState";
 
     private boolean mProfileActivityInProgress;
+    private boolean mMainState;
 
+    private AppDir appDir;
+    private Uri resultUri;
     private User user;
     private String currentUserId;
     private FirebaseAuth mAuth;
@@ -84,10 +87,10 @@ public class ProfileActivity extends AppCompatActivity {
 
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         user = new User();
+        showPermissionsDialog();
 
         getSharedPreferences();
         retrieveUserProfilePic();
-        waitImageLoad(3);
 
         Fade fade = new Fade();
         View decor = getWindow().getDecorView();
@@ -108,7 +111,13 @@ public class ProfileActivity extends AppCompatActivity {
                 Permissions.ProfileImagePermissionDialog(this, ProfileActivity.this);
         });
 
-        showPermissionsDialog();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!Permissions.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+            appDir = new AppDir();
     }
 
     private void showPermissionsDialog() {
@@ -123,17 +132,14 @@ public class ProfileActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] + grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 cropImage();
             }
-            else {
-                Toast.makeText(this, "You can't get access to camera and media storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
     private void getSharedPreferences() {
         mProfileActivityInProgress = mSharedPreferences.getBoolean(Profile_State, false);
-        user.setImage(mSharedPreferences.getString(IMAGE_KEY,""));
-        mUserName.setText(mSharedPreferences.getString(NAME_KEY, ""));
-        mUserStatus.setText(mSharedPreferences.getString(STATUS_KEY, ""));
+        user.setImage(mSharedPreferences.getString(IMAGE_KEY,null));
+        mUserName.setText(mSharedPreferences.getString(NAME_KEY, null));
+        mUserStatus.setText(mSharedPreferences.getString(STATUS_KEY, null));
     }
 
     private void setSharedPreferences() {
@@ -150,24 +156,6 @@ public class ProfileActivity extends AppCompatActivity {
                 .start(ProfileActivity.this);
     }
 
-    private void waitImageLoad(int time) {
-        if (time == 1){
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        else {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -178,7 +166,7 @@ public class ProfileActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 mProgressBar.setVisibility(View.VISIBLE);
 
-                Uri resultUri = Objects.requireNonNull(result).getUri();
+                resultUri = Objects.requireNonNull(result).getUri();
 
                 StorageReference filePath = userProfileImageRef.child(currentUserId + getString(R.string.JPG));
 
@@ -192,7 +180,6 @@ public class ProfileActivity extends AppCompatActivity {
                                     .addOnCompleteListener(task -> {
                                         if (task.isSuccessful()) {
                                             loadImage();
-                                            waitImageLoad(3);
                                             Toast.makeText(ProfileActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
                                             mProgressBar.setVisibility(View.GONE);
                                         }
@@ -201,7 +188,7 @@ public class ProfileActivity extends AppCompatActivity {
                     }
                     else {
                         String message = Objects.requireNonNull(taskSnapshot.getError()).toString();
-                        Toast.makeText(ProfileActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ProfileActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
                         mProgressBar.setVisibility(View.GONE);
                     }
                 });
@@ -210,9 +197,9 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void retrieveUserProfilePic() {
-        user.setImage(mSharedPreferences.getString(IMAGE_KEY,""));
+        user.setImage(mSharedPreferences.getString(IMAGE_KEY, null));
 
-        if (user.getImage().equals("")) {
+        if (user.getImage() == null) {
             rootRef.child(getString(R.string.USERS)).child(currentUserId)
                     .addValueEventListener(new ValueEventListener() {
                         @Override
@@ -249,6 +236,13 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (mProfileActivityInProgress)
+            setSharedPreferences();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         if (mProfileActivityInProgress)
@@ -258,39 +252,29 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        if (mProfileActivityInProgress)
+            setSharedPreferences();
     }
 
     private void updateProfile() {
-        user.setName(mUserName.getText().toString());
-        user.setStatus(mUserStatus.getText().toString());
-
-        if ((user.getName().isEmpty()) || (user.getName().equals(""))) {
-            Toast.makeText(this, R.string.USER_NAME_MISSING, Toast.LENGTH_SHORT).show();
-        }
-        else if ((user.getStatus().isEmpty()) || (user.getStatus().equals(""))) {
-            Toast.makeText(this, R.string.STATUS_MISSING, Toast.LENGTH_SHORT).show();
+        if (mUserName.getText().toString().isEmpty())
+            Toast.makeText(this, "User name is missing...", Toast.LENGTH_SHORT).show();
+        else if (mUserStatus.getText().toString().isEmpty()) {
+            Toast.makeText(this, "Status is missing...", Toast.LENGTH_SHORT).show();
         }
         else {
-            HashMap<String, Object> profileMap = new HashMap<>();
-            profileMap.put(getString(R.string.NAME), user.getName());
-            profileMap.put(getString(R.string.STATUS), user.getStatus());
-            rootRef.child(getString(R.string.USERS)).child(currentUserId).updateChildren(profileMap)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(ProfileActivity.this, R.string.PROFILE_UPDATED, Toast.LENGTH_SHORT).show();
-                            waitImageLoad(1);
-                            sendUserToMainActivity();
-                        }
-                        else {
-                            String message = Objects.requireNonNull(task.getException()).toString();
-                            Toast.makeText(ProfileActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            mSharedPreferences.edit().putString(STATUS_KEY, mUserStatus.getText().toString()).apply();
+            mSharedPreferences.edit().putString(NAME_KEY, mUserName.getText().toString()).apply();
+            if (user.getImage() != null)
+                mSharedPreferences.edit().putString(IMAGE_KEY, user.getImage()).apply();
+            mSharedPreferences.edit().putBoolean(Profile_State, false).apply();
+            sendUserToMainActivity();
         }
     }
 
     private void sendUserToMainActivity() {
-        mSharedPreferences.edit().clear().apply();
+        mSharedPreferences.edit().putBoolean(Profile_State, false).apply();
+        mSharedPreferences.edit().putBoolean(Main_State, true).apply();
         Intent mainIntent = new Intent(ProfileActivity.this, MainActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(mainIntent);

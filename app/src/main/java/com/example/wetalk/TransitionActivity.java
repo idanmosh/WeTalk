@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.transition.Fade;
 import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.wetalk.Classes.FadeClass;
@@ -17,25 +16,16 @@ import com.example.wetalk.Login.ProfileActivity;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import java.io.File;
 
 public class TransitionActivity extends AppCompatActivity {
 
-    File file;
-
     private static int WELCOME_TIMEOUT = 1000;
-    private final static String USERS = "Users";
-    private final static String NAME = "name";
-    private final static String STATUS = "status";
     private static final String MyPREFERENCES = "MyPrefs";
     private static final String Login_State = "loginState";
     private static final String Profile_State = "profileState";
+    private static final String Main_State = "mainState";
 
 
     private SharedPreferences mSharedPreferences;
@@ -46,6 +36,7 @@ public class TransitionActivity extends AppCompatActivity {
 
     private boolean mLoginState;
     private boolean mProfileState;
+    private boolean mMainState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +64,7 @@ public class TransitionActivity extends AppCompatActivity {
     private void getSharedPreferences() {
         mLoginState = mSharedPreferences.getBoolean(Login_State, false);
         mProfileState = mSharedPreferences.getBoolean(Profile_State, false);
+        mMainState = mSharedPreferences.getBoolean(Main_State,false);
     }
 
     @Override
@@ -83,29 +75,10 @@ public class TransitionActivity extends AppCompatActivity {
             sendUserToLoginActivity();
         else if (mProfileState)
             sendUserToProfileActivity();
-        else if(currentUser != null)
-            checkIfUserExist();
+        else if(mMainState)
+            sendUserToMainActivity();
         else
             sendUserToHelloActivity();
-    }
-
-    private void checkIfUserExist() {
-        String currentUserId = currentUser.getUid();
-
-        rootRef.child(USERS).child(currentUserId)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            if (dataSnapshot.hasChild(NAME) && dataSnapshot.hasChild(STATUS))
-                                sendUserToMainActivity();
-                            else
-                                sendUserToHelloActivity();
-                        }
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) { }
-                });
     }
 
     private void sendUserToProfileActivity() {
@@ -119,6 +92,7 @@ public class TransitionActivity extends AppCompatActivity {
     }
 
     private void sendUserToHelloActivity() {
+        mSharedPreferences.edit().clear().apply();
         new Handler().postDelayed(() -> {
             Intent helloIntent = new Intent(TransitionActivity.this, HelloActivity.class);
             helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

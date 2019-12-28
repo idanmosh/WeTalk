@@ -1,6 +1,8 @@
 package com.example.wetalk;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.transition.Fade;
 import android.view.Menu;
@@ -28,14 +30,18 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String MyPREFERENCES = "MyPrefs";
     private final static String PROFILE_IMAGE = "Profile Images";
     private final static String TITLE = "WeTalk";
     private final static String USERS = "Users";
 
+    private ProgressDialog loadingBar;
     private Toolbar mToolbar, mSearchToolbar;
     private ViewPager mViewPager;
     private TabLayout mTabLayout;
     private TabsAccessorAdapter mTabsAccessorAdapter;
+
+    private SharedPreferences mSharedPreferences;
 
     private FirebaseUser currentUser;
     private FirebaseAuth mAuth;
@@ -61,12 +67,15 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mSearchToolbar);
         setSupportActionBar(mToolbar);
 
+        mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
+
         Objects.requireNonNull(getSupportActionBar()).setTitle(TITLE);
 
         mViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
         mViewPager.setAdapter(mTabsAccessorAdapter);
 
+        loadingBar = new ProgressDialog(this);
         mTabLayout = findViewById(R.id.main_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
 
@@ -106,24 +115,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void deleteUserData() {
-        if (currentUser != null) {
-            rootRef.child(USERS).child(currentUser.getUid()).removeValue().addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    StorageReference filePath = userProfileImageRef.child(currentUser.getUid() + getString(R.string.JPG));
-                    filePath.delete().addOnCompleteListener(task1 -> deleteUserAccount());
-                }
-            });
-        }
-    }
 
-    private void deleteUserAccount(){
-        currentUser.delete()
-                .addOnCompleteListener(task2 -> {
-                    if (task2.isSuccessful()) {
-                        Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
-                        sendUserToTransitionActivity();
-                    }
+        loadingBar.setTitle(getString(R.string.DELETE_ACCOUNT));
+        loadingBar.setMessage(getString(R.string.PLEASE_WAIT_WHILE_WE_DELETE_YOUR_ACCOUNT));
+        loadingBar.setCanceledOnTouchOutside(false);
+        loadingBar.show();
+        rootRef.child(USERS).child(currentUser.getUid()).removeValue().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                StorageReference filePath = userProfileImageRef.child(currentUser.getUid() + getString(R.string.JPG));
+                filePath.delete().addOnCompleteListener(task1 -> {
+                    mSharedPreferences.edit().clear().apply();
+                    currentUser.delete()
+                            .addOnCompleteListener(task2 -> {
+                                Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
+                                loadingBar.dismiss();
+                                sendUserToTransitionActivity();
+                            });
+                    loadingBar.dismiss();
                 });
+            }
+        });
     }
 
     private void sendUserToTransitionActivity() {

@@ -1,6 +1,7 @@
 package com.example.wetalk.Settings;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -34,7 +35,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.HashMap;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -47,6 +47,13 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView mUserPhoneNumber;
     private CircleImageView mUserProfileImage;
     private ImageView mUserProfileImage2;
+
+    private SharedPreferences mSharedPreferences;
+    private static final String MyPREFERENCES = "MyPrefs";
+    private static final String NAME_KEY = "name_key";
+    private static final String IMAGE_KEY = "image_key";
+    private static final String STATUS_KEY = "status_key";
+    private static final String PHONE_KEY = "phone_key";
 
     private Uri profilePic;
 
@@ -73,9 +80,10 @@ public class SettingsActivity extends AppCompatActivity {
         mUserStatus = findViewById(R.id.set_user_status);
         mUserPhoneNumber = findViewById(R.id.profile_phone_number);
 
+        mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         user = new User();
         retrieveUserInfo();
-
+        retrieveUserPic();
 
         updateProfileBtn = findViewById(R.id.update_profile_btn);
 
@@ -104,85 +112,68 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        retrieveUserPic();
+        retrieveUserInfo();
+    }
+
+    private void retrieveUserPic() {
+        user.setImage(mSharedPreferences.getString(IMAGE_KEY, null));
+
+        if (user.getImage() == null) {
+            rootRef.child(getString(R.string.USERS)).child(currentUserId)
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                if (dataSnapshot.hasChild(getString(R.string.IMAGE))) {
+                                    user.setImage(Objects.requireNonNull(dataSnapshot.child(getString(R.string.IMAGE)).getValue()).toString());
+                                    mSharedPreferences.edit().putString(IMAGE_KEY, user.getImage()).apply();
+                                    loadImage();
+                                }
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) { }
+                    });
+        }
+        else {
+            loadImage();
+        }
     }
 
     private void loadImage() {
-        user.setImage(profilePic.toString());
-        Glide.with(getApplicationContext()).asBitmap().load(user.getImage()).into(new CustomTarget<Bitmap>() {
-            @Override
-            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                mUserProfileImage.setImageBitmap(resource);
-                mUserProfileImage2.setImageBitmap(resource);
-            }
+        if (user.getImage() != null) {
+            Glide.with(getApplicationContext()).asBitmap().load(user.getImage()).into(new CustomTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                    mUserProfileImage.setImageBitmap(resource);
+                    mUserProfileImage2.setImageBitmap(resource);
+                }
 
-            @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {
-                Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage);
-                Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage2);
-            }
-        });
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {
+                    Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage);
+                    Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage2);
+                }
+            });
+        }
     }
 
     private void retrieveUserInfo() {
-        rootRef.child(getString(R.string.USERS)).child(currentUserId)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            if (dataSnapshot.hasChild(getString(R.string.IMAGE))) {
-                                profilePic =  Uri.parse(Objects.requireNonNull(dataSnapshot.child(getString(R.string.IMAGE)).getValue()).toString());
-                                loadImage();
-                            }
-
-                            if (dataSnapshot.hasChild(getString(R.string.NAME)) && dataSnapshot.hasChild(getString(R.string.STATUS))) {
-                                user.setName(Objects.requireNonNull(dataSnapshot.child(getString(R.string.NAME)).getValue()).toString());
-                                user.setStatus(Objects.requireNonNull(dataSnapshot.child(getString(R.string.STATUS)).getValue()).toString());
-
-                                mUserStatus.setText(user.getStatus());
-                                mUserName.setText(user.getName());
-                            }
-
-                            if (dataSnapshot.hasChild(getString(R.string.PHONE))) {
-                                user.setPhone(Objects.requireNonNull(dataSnapshot.child(getString(R.string.PHONE)).getValue()).toString());
-
-                                mUserPhoneNumber.setVisibility(View.VISIBLE);
-                                mUserPhoneNumber.setText(user.getPhone());
-                            }
-
-                        }
-                        else
-                            Toast.makeText(SettingsActivity.this, R.string.UPDATE_MESSAGE, Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) { }
-                });
+        mUserName.setText(mSharedPreferences.getString(NAME_KEY, null));
+        mUserStatus.setText(mSharedPreferences.getString(STATUS_KEY,null));
+        mUserPhoneNumber.setText(mSharedPreferences.getString(PHONE_KEY, null));
     }
 
     private void updateSettings() {
-        user.setName(mUserName.getText().toString());
-        user.setStatus(mUserStatus.getText().toString());
-
-        if ((user.getName().isEmpty()) || (user.getName().equals(""))) {
+        if (mUserName.getText().toString().isEmpty())
             Toast.makeText(this, "User name is missing...", Toast.LENGTH_SHORT).show();
-        }
-        else if ((user.getStatus().isEmpty()) || (user.getStatus().equals(""))) {
+        else if (mUserStatus.getText().toString().isEmpty()) {
             Toast.makeText(this, "Status is missing...", Toast.LENGTH_SHORT).show();
         }
         else {
-            HashMap<String, Object> profileMap = new HashMap<>();
-            profileMap.put(getString(R.string.NAME), user.getName());
-            profileMap.put(getString(R.string.STATUS), user.getStatus());
-            rootRef.child(getString(R.string.USERS)).child(currentUserId).updateChildren(profileMap)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(SettingsActivity.this, "Profile updated", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            String message = Objects.requireNonNull(task.getException()).toString();
-                            Toast.makeText(SettingsActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            mSharedPreferences.edit().putString(STATUS_KEY, mUserStatus.getText().toString()).apply();
+            mSharedPreferences.edit().putString(NAME_KEY, mUserName.getText().toString()).apply();
         }
     }
 
@@ -201,7 +192,13 @@ public class SettingsActivity extends AppCompatActivity {
         Intent mainIntent = new Intent(SettingsActivity.this, MainActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(mainIntent);
-        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
+        overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
         finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        sendUserToMainActivity();
     }
 }

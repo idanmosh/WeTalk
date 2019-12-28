@@ -19,6 +19,7 @@ public final class Permissions  {
     public static final int IMAGE_REQUEST = 101;
 
     public static final String READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
+    public static final String WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
     public static final String READ_CONTACTS = Manifest.permission.READ_CONTACTS;
     public static final String CAMERA = Manifest.permission.CAMERA;
 
@@ -32,7 +33,8 @@ public final class Permissions  {
                                 " access your contacts, photos, media, and files from your device.")
                         .setIcon(R.drawable.storage_contacts_permission)
                         .setPositiveText(R.string.continue_btn)
-                        .onPositive((dialog1, which) -> requestPermissions(activity, READ_STORAGE, READ_CONTACTS, PROFILE_REQUEST_CODE))
+                        .onPositive((dialog1, which) -> requestPermissions(activity,
+                                new String[]{READ_STORAGE,WRITE_STORAGE,READ_CONTACTS}, PROFILE_REQUEST_CODE))
                         .setNegativeText(R.string.decline)
                         .onNegative((dialog12, which) -> {
                             Toast.makeText(context, "You can't get access to contacts, photos," +
@@ -51,7 +53,7 @@ public final class Permissions  {
                             ", allow WeTalk to access your camera ,photos, media, and files from your device.")
                     .setIcon(R.drawable.camera_permission)
                     .setPositiveText(R.string.continue_btn)
-                    .onPositive((dialog1, which) -> requestPermissions(activity, READ_STORAGE, CAMERA, IMAGE_REQUEST))
+                    .onPositive((dialog1, which) -> requestPermissions(activity, new String[]{READ_STORAGE,CAMERA}, IMAGE_REQUEST))
                     .setNegativeText(R.string.decline)
                     .onNegative((dialog12, which) -> {
                         Toast.makeText(context, "You can't get access to camera and media" +
@@ -80,8 +82,8 @@ public final class Permissions  {
         ActivityCompat.requestPermissions(activity,new String[]{permission}, requestCode);
     }
 
-    public static void requestPermissions(AppCompatActivity activity, @NonNull String permission1, @NonNull String permission2, int requestCode) {
-        ActivityCompat.requestPermissions(activity,new String[]{permission1, permission2}, requestCode);
+    public static void requestPermissions(AppCompatActivity activity, @NonNull String[] permissions, int requestCode) {
+        ActivityCompat.requestPermissions(activity, permissions, requestCode);
     }
 
 }

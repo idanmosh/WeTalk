@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.transition.Fade;
 import android.view.View;
 import android.widget.Button;
@@ -41,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final String Login_State = "loginState";
     private static final String Profile_State = "profileState";
     private static final String VerificationId_Key = "verificationId_key";
+    private static final String PHONE_KEY = "phone_key";
 
     private boolean mVerificationInProgress;
 
@@ -85,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
 
         getSharedPreferences();
-        if (mVerificationInProgress){
+        if (mVerificationInProgress) {
             mSendLayout.setVisibility(View.INVISIBLE);
             mVerifyLayout.setVisibility(View.VISIBLE);
         }
@@ -124,26 +124,23 @@ public class LoginActivity extends AppCompatActivity {
                 builder.setNeutralButton("Edit", (dialog, which) -> dialog.cancel());
                 AlertDialog dialog = builder.create();
                 dialog.show();
-            }
-            else
-                Toast.makeText(LoginActivity.this, "Please enter valid phone number ...", Toast.LENGTH_SHORT).show();
-
+            } else
+                Toast.makeText(LoginActivity.this, R.string.PLEASE_ENTER_VALID, Toast.LENGTH_SHORT).show();
         });
 
         mVerify.setOnClickListener(v -> {
             verificationCode = mVerificationCode.getText().toString();
 
             if (!verificationCode.isEmpty()) {
-                loadingBar.setTitle("Verification Code");
-                loadingBar.setMessage("please wait while we verifying verification code...");
+                loadingBar.setTitle(getString(R.string.VERIFICATION_CODE));
+                loadingBar.setMessage(getString(R.string.PLEASE_WAIT));
                 loadingBar.setCanceledOnTouchOutside(false);
                 loadingBar.show();
 
                 PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId, verificationCode);
                 signInWithPhoneAuthCredential(credential);
-            }
-            else {
-                Toast.makeText(LoginActivity.this, "Please write verification code first...", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(LoginActivity.this, R.string.WRITE_VERIFICATION_CODE, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -156,7 +153,7 @@ public class LoginActivity extends AppCompatActivity {
                 mResendToken = token;
 
                 loadingBar.dismiss();
-                Toast.makeText(LoginActivity.this, "Code has been sent, please check and verify...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, R.string.CODE_HAS_BEEN_SENT, Toast.LENGTH_SHORT).show();
 
                 mSendLayout.setVisibility(View.INVISIBLE);
                 mVerifyLayout.setVisibility(View.VISIBLE);
@@ -171,7 +168,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onVerificationFailed(FirebaseException e) {
                 mVerificationInProgress = false;
-                Toast.makeText(LoginActivity.this, "Invalid phone number, please enter correct phone number with your country code...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, R.string.INVALID_PHONE_NUMBER, Toast.LENGTH_SHORT).show();
                 loadingBar.dismiss();
 
                 mSendLayout.setVisibility(View.VISIBLE);
@@ -184,14 +181,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (mVerificationInProgress && validatePhoneNumber()) {
-            phoneNumber = ccp.getSelectedCountryCodeWithPlus() + mPhoneNumber.getText().toString();
-            startPhoneNumberVerification();
-        }
-    }
-
-    private boolean validatePhoneNumber() {
-        return (!TextUtils.isEmpty(mPhoneNumber.getText().toString()));
+        getSharedPreferences();
     }
 
     private void startPhoneNumberVerification() {
@@ -202,6 +192,7 @@ public class LoginActivity extends AppCompatActivity {
                 this,               // Activity (for callback binding)
                 mCallbacks);        // OnVerificationStateChangedCallbacks
 
+        mSharedPreferences.edit().putString(PHONE_KEY, phoneNumber).apply();
         mVerificationInProgress = true;
         mTitle.setText(String.format("Verify  %s", phoneNumber));
     }
@@ -216,15 +207,15 @@ public class LoginActivity extends AppCompatActivity {
                         rootRef.child(USERS).child(currentUserId).updateChildren(loginMap)
                                 .addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
-                                        Toast.makeText(LoginActivity.this, "You are logged in successfully...", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(LoginActivity.this, R.string.YOUR_LOGGED_IN_SUCCESS, Toast.LENGTH_SHORT).show();
                                         loadingBar.dismiss();
-                                        mSharedPreferences.edit().clear().apply();
+                                        mSharedPreferences.edit().putBoolean(Login_State, false).apply();
                                         mVerificationInProgress = false;
                                         sendUserToProfileActivity();
                                     }
                                     else {
                                         String message = Objects.requireNonNull(task1.getException()).toString();
-                                        Toast.makeText(LoginActivity.this, "Error : " + message, Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(LoginActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
                                     }
                                 });
                     } else {
@@ -238,7 +229,7 @@ public class LoginActivity extends AppCompatActivity {
     private void getSharedPreferences() {
         mVerificationInProgress = mSharedPreferences.getBoolean(Login_State, false);
         mVerificationId = mSharedPreferences.getString(VerificationId_Key, null);
-        mTitle.setText(mSharedPreferences.getString(VERIFY_TITLE, "Enter your phone number"));
+        mTitle.setText(mSharedPreferences.getString(VERIFY_TITLE, getString(R.string.ENTER_YOUR_PHONE_NUMBER)));
     }
 
     private void setSharedPreferences() {
@@ -261,6 +252,13 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        if (mVerificationInProgress)
+            setSharedPreferences();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
         if (mVerificationInProgress)
             setSharedPreferences();
     }

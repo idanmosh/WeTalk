@@ -44,4 +44,14 @@
     <string name="PLEASE_WAIT_PROFILE_UPDATED">Please wait, your profile image is updating...</string>
     <string name="PROFILE_IMAGE_UPLOADED_SUCCESS">Profile image uploaded successfully...</string>
     <string name="PROFILE_IMAGES">Profile Images</string>
+    <string name="ENTER_YOUR_PHONE_NUMBER">Enter your phone number</string>
+    <string name="YOUR_LOGGED_IN_SUCCESS">You are logged in successfully...</string>
+    <string name="INVALID_PHONE_NUMBER">Invalid phone number, please enter correct phone number with your country code...</string>
+    <string name="CODE_HAS_BEEN_SENT">Code has been sent, please check and verify...</string>
+    <string name="WRITE_VERIFICATION_CODE">Please write verification code first...</string>
+    <string name="PLEASE_WAIT">please wait while we verifying verification code...</string>
+    <string name="VERIFICATION_CODE">Verification Code</string>
+    <string name="PLEASE_ENTER_VALID">Please enter valid phone number ...</string>
+    <string name="DELETE_ACCOUNT">Delete Account</string>
+    <string name="PLEASE_WAIT_WHILE_WE_DELETE_YOUR_ACCOUNT">Please wait while we delete your account information...</string>
 </resources>
