@@ -19,6 +19,7 @@ import java.util.Objects;
  */
 public class GroupsFragment extends Fragment {
 
+    private View view;
     private FloatingActionButton mCreateGroup;
 
     public GroupsFragment() { }
@@ -27,7 +28,7 @@ public class GroupsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_groups, container, false);
+        view = inflater.inflate(R.layout.fragment_groups, container, false);
 
         mCreateGroup = view.findViewById(R.id.create_group_btn);
 

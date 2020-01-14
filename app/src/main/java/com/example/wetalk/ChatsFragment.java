@@ -19,6 +19,7 @@ import java.util.Objects;
  */
 public class ChatsFragment extends Fragment {
 
+    private View chatView;
     private FloatingActionButton mFindContacts;
 
     public ChatsFragment() { }
@@ -26,18 +27,18 @@ public class ChatsFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_chats, container, false);
+        chatView = inflater.inflate(R.layout.fragment_chats, container, false);
 
-        mFindContacts = view.findViewById(R.id.find_contacts_btn);
+        mFindContacts = chatView.findViewById(R.id.find_contacts_btn);
 
         mFindContacts.setOnClickListener(v -> sendUserToFindContactsActivity());
 
 
-        return view;
+        return chatView;
     }
 
     private void sendUserToFindContactsActivity() {
-        Intent findContactIntent = new Intent( getActivity(), FindFriendsActivity.class);
+        Intent findContactIntent = new Intent( getActivity(), FindContactActivity.class);
         findContactIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(findContactIntent);
         Objects.requireNonNull(getActivity()).overridePendingTransition(R.anim.slide_up, R.anim.slide_up);

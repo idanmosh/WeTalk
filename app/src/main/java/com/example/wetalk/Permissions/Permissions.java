@@ -17,10 +17,12 @@ public final class Permissions  {
 
     public static final int PROFILE_REQUEST_CODE = 100;
     public static final int IMAGE_REQUEST = 101;
+    public static final int EXTERNAL_REQUEST = 102;
 
     public static final String READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
     public static final String WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
     public static final String READ_CONTACTS = Manifest.permission.READ_CONTACTS;
+    public static final String GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
     public static final String CAMERA = Manifest.permission.CAMERA;
 
     private Permissions() { }
@@ -34,7 +36,7 @@ public final class Permissions  {
                         .setIcon(R.drawable.storage_contacts_permission)
                         .setPositiveText(R.string.continue_btn)
                         .onPositive((dialog1, which) -> requestPermissions(activity,
-                                new String[]{READ_STORAGE,WRITE_STORAGE,READ_CONTACTS}, PROFILE_REQUEST_CODE))
+                                new String[]{READ_STORAGE,WRITE_STORAGE,READ_CONTACTS,GET_ACCOUNTS}, PROFILE_REQUEST_CODE))
                         .setNegativeText(R.string.decline)
                         .onNegative((dialog12, which) -> {
                             Toast.makeText(context, "You can't get access to contacts, photos," +
@@ -53,10 +55,29 @@ public final class Permissions  {
                             ", allow WeTalk to access your camera ,photos, media, and files from your device.")
                     .setIcon(R.drawable.camera_permission)
                     .setPositiveText(R.string.continue_btn)
-                    .onPositive((dialog1, which) -> requestPermissions(activity, new String[]{READ_STORAGE,CAMERA}, IMAGE_REQUEST))
+                    .onPositive((dialog1, which) -> requestPermissions(activity, new String[]{READ_STORAGE,WRITE_STORAGE,CAMERA}, IMAGE_REQUEST))
                     .setNegativeText(R.string.decline)
                     .onNegative((dialog12, which) -> {
                         Toast.makeText(context, "You can't get access to camera and media" +
+                                " storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+
+            dialog.show();
+        }
+    }
+
+    public static void ProfileShareImagePermissionDialog(@NonNull Context context, AppCompatActivity activity) {
+        if (checkPermissions(context, READ_STORAGE, WRITE_STORAGE)) {
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To share a photo or select a photo from the gallery" +
+                            ", allow WeTalk to access your photos, media, and files from your device.")
+                    .setIcon(R.drawable.camera_permission)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(activity, new String[]{READ_STORAGE,WRITE_STORAGE}, EXTERNAL_REQUEST))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access to media" +
                                 " storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
                     })
                     .setCancelable(false);

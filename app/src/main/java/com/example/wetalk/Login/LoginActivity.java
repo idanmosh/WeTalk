@@ -15,7 +15,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.wetalk.Classes.FadeClass;
 import com.example.wetalk.R;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuth;
@@ -58,6 +57,7 @@ public class LoginActivity extends AppCompatActivity {
     private LinearLayout mSendLayout, mVerifyLayout;
     private ProgressDialog loadingBar;
 
+    private String accountType;
     private String mVerificationId, phoneNumber, verificationCode;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
 
@@ -65,6 +65,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        fadeActivity();
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -89,14 +91,6 @@ public class LoginActivity extends AppCompatActivity {
             mSendLayout.setVisibility(View.INVISIBLE);
             mVerifyLayout.setVisibility(View.VISIBLE);
         }
-
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        FadeClass fadeClass = new FadeClass(decor);
-        fadeClass.initFade();
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
 
         loadingBar = new ProgressDialog(this);
 
@@ -267,5 +261,21 @@ public class LoginActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (!mVerificationInProgress)
             super.onBackPressed();
+    }
+
+    private void fadeActivity() {
+        Fade fade = new Fade();
+        View decor = getWindow().getDecorView();
+        fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
+        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
+        fade.excludeTarget(android.R.id.statusBarBackground,true);
+        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+
+        getWindow().setEnterTransition(fade);
+        getWindow().setExitTransition(fade);
     }
 }

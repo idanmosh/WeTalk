@@ -6,7 +6,13 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TabsAccessorAdapter extends FragmentPagerAdapter {
+
+    private final List<Fragment> fragmentsList = new ArrayList<>();
+    private final List<Fragment> titlesList = new ArrayList<>();
 
     @SuppressWarnings("deprecation")
     TabsAccessorAdapter(@NonNull FragmentManager fm) {

@@ -24,7 +24,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.example.wetalk.Classes.FadeClass;
+import com.example.wetalk.Classes.AppDir;
 import com.example.wetalk.Classes.User;
 import com.example.wetalk.Permissions.Permissions;
 import com.example.wetalk.R;
@@ -55,7 +55,9 @@ public class ProfileImageActivity extends AppCompatActivity {
     private static final String IMAGE_KEY = "image_key";
     private Uri resultUri;
 
+    private AppDir appDir;
     private User user;
+
     private String currentUserId;
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
@@ -66,6 +68,8 @@ public class ProfileImageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile_image);
 
+        fadeActivity();
+
         mAuth = FirebaseAuth.getInstance();
         currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         rootRef = FirebaseDatabase.getInstance().getReference();
@@ -73,16 +77,8 @@ public class ProfileImageActivity extends AppCompatActivity {
         mImage = findViewById(R.id.shared_profile_image);
         mImage2 = findViewById(R.id.circle_shred_profile_image);
 
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        FadeClass fadeClass = new FadeClass(decor);
-        fadeClass.initFade();
-
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         user = new User();
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
 
         retrieveUserProfilePic();
 
@@ -95,6 +91,13 @@ public class ProfileImageActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         mToolbar.setNavigationOnClickListener(v -> sendUserToSettingsActivity());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!Permissions.checkPermissions(this, Permissions.READ_STORAGE, Permissions.WRITE_STORAGE))
+            appDir = new AppDir();
     }
 
     private void retrieveUserProfilePic() {
@@ -151,14 +154,36 @@ public class ProfileImageActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.edit_profile_picture:
-                checkPermissions();
+                checkCropPermissions();
+                return true;
+            case R.id.share_profile_picture:
+                checkSharePermissions();
                 return true;
             default:
                 return super.onContextItemSelected(item);
         }
     }
 
-    private void checkPermissions() {
+    private void checkSharePermissions() {
+        if (!Permissions.checkPermissions(this, Permissions.READ_STORAGE, Permissions.WRITE_STORAGE)) {
+            appDir = new AppDir();
+            appDir.saveProfileImage(mImage);
+            shareContent();
+        }
+        else
+            Permissions.ProfileShareImagePermissionDialog(this, ProfileImageActivity.this);
+    }
+
+    private void shareContent() {
+        Uri uri = appDir.getProfileImage();
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        shareIntent.setType(getString(R.string.IMAGE_TYPE));
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.SHARE_IMAGE_TITLE)));
+    }
+
+    private void checkCropPermissions() {
         if (!Permissions.checkPermissions(this, Permissions.READ_STORAGE, Permissions.CAMERA))
             cropImage();
         else
@@ -184,6 +209,17 @@ public class ProfileImageActivity extends AppCompatActivity {
                 Toast.makeText(this, "You can't get access to camera and media storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
             }
         }
+
+        if (requestCode == Permissions.EXTERNAL_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] + grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                appDir = new AppDir();
+                appDir.saveProfileImage(mImage);
+                shareContent();
+            }
+            else {
+                Toast.makeText(this, "You can't get access to media storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -202,9 +238,15 @@ public class ProfileImageActivity extends AppCompatActivity {
                 resultUri = Objects.requireNonNull(result).getUri();
                 mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
                 user.setImage(resultUri.toString());
-                loadImage();
+                rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(user.getImage())
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                loadImage();
+                                loadingBar.dismiss();
+                                Toast.makeText(ProfileImageActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                 loadingBar.dismiss();
-                Toast.makeText(ProfileImageActivity.this, R.string.PROFILE_IMAGE_UPLOADED_SUCCESS, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -215,4 +257,28 @@ public class ProfileImageActivity extends AppCompatActivity {
         finishAfterTransition();
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        sendUserToSettingsActivity();
+    }
+
+    private void fadeActivity() {
+        getWindow().setEnterTransition(null);
+        getWindow().setExitTransition(null);
+        Fade fade = new Fade();
+        View decor = getWindow().getDecorView();
+        fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
+        fade.excludeTarget(decor.findViewById(R.id.profile_image_layout), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
+        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
+        fade.excludeTarget(android.R.id.statusBarBackground,true);
+        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+
+        getWindow().setEnterTransition(fade);
+        getWindow().setExitTransition(fade);
+    }
 }

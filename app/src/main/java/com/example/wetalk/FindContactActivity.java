@@ -5,22 +5,43 @@ import android.transition.Fade;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.wetalk.Classes.Contacts;
+
+import java.util.List;
 import java.util.Objects;
 
-public class GroupActivity extends AppCompatActivity {
+public class FindContactActivity extends AppCompatActivity {
+
+    private Toolbar mToolBar;
+    private RecyclerView contactsRecyclerView;
+    private List<Contacts> contactsList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_group);
+        setContentView(R.layout.activity_find_contacts);
 
         fadeActivity();
 
+        contactsRecyclerView = findViewById(R.id.contacts_recycler_list);
+        ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(getApplicationContext(), contactsList);
+        contactsRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
 
-        Objects.requireNonNull(getSupportActionBar()).setDisplayShowHomeEnabled(true);
+        mToolBar = findViewById(R.id.find_friends_toolbar);
+        setSupportActionBar(mToolBar);
+
+        Objects.requireNonNull(getSupportActionBar()).setTitle("Select Contact");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
     }
+
+
 
     private void fadeActivity() {
         Fade fade = new Fade();

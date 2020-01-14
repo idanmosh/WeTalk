@@ -14,4 +14,8 @@
 
     </style>
 
+    <style name="TextLimitError" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/colorRed</item>
+    </style>
+
 </resources>

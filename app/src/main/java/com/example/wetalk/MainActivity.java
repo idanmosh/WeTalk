@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
-import com.example.wetalk.Classes.FadeClass;
 import com.example.wetalk.Settings.SettingsActivity;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,10 +56,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize() {
+        fadeActivity();
+
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
         userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);
+
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         mSearchToolbar = findViewById(R.id.search_page_toolbar);
@@ -78,14 +80,6 @@ public class MainActivity extends AppCompatActivity {
         loadingBar = new ProgressDialog(this);
         mTabLayout = findViewById(R.id.main_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
-
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        FadeClass fadeClass = new FadeClass(decor);
-        fadeClass.initFade();
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
     }
 
     @Override
@@ -152,8 +146,25 @@ public class MainActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
     }
+
     private void sendUserToFindFriendsActivity() {
-        Intent findsFriends = new Intent(MainActivity.this, FindFriendsActivity.class);
+        Intent findsFriends = new Intent(MainActivity.this, FindContactActivity.class);
         startActivity(findsFriends);
+    }
+
+    private void fadeActivity() {
+        Fade fade = new Fade();
+        View decor = getWindow().getDecorView();
+        fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
+        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
+        fade.excludeTarget(android.R.id.statusBarBackground,true);
+        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+
+        getWindow().setEnterTransition(fade);
+        getWindow().setExitTransition(fade);
     }
 }

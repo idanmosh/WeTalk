@@ -1,6 +1,5 @@
 package com.example.wetalk.Login;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -23,7 +22,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.example.wetalk.Classes.AppDir;
-import com.example.wetalk.Classes.FadeClass;
 import com.example.wetalk.Classes.User;
 import com.example.wetalk.MainActivity;
 import com.example.wetalk.Permissions.Permissions;
@@ -60,7 +58,6 @@ public class ProfileActivity extends AppCompatActivity {
     private static final String Main_State = "mainState";
 
     private boolean mProfileActivityInProgress;
-    private boolean mMainState;
 
     private AppDir appDir;
     private Uri resultUri;
@@ -74,6 +71,8 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+
+        fadeActivity();
 
         mAuth = FirebaseAuth.getInstance();
         currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
@@ -92,14 +91,6 @@ public class ProfileActivity extends AppCompatActivity {
         getSharedPreferences();
         retrieveUserProfilePic();
 
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        FadeClass fadeClass = new FadeClass(decor);
-        fadeClass.initFade();
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
-
         nextProfileBtn = findViewById(R.id.next_profile_btn);
 
         nextProfileBtn.setOnClickListener(v -> updateProfile());
@@ -116,7 +107,7 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (!Permissions.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        if (!Permissions.checkPermissions(this, Permissions.READ_STORAGE, Permissions.WRITE_STORAGE))
             appDir = new AppDir();
     }
 
@@ -280,5 +271,21 @@ public class ProfileActivity extends AppCompatActivity {
         startActivity(mainIntent);
         overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
+    }
+
+    private void fadeActivity() {
+        Fade fade = new Fade();
+        View decor = getWindow().getDecorView();
+        fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
+        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
+        fade.excludeTarget(android.R.id.statusBarBackground,true);
+        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+
+        getWindow().setEnterTransition(fade);
+        getWindow().setExitTransition(fade);
     }
 }

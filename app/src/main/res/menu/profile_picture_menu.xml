@@ -8,4 +8,10 @@
         android:title="@string/edit_profile_pic_item"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/share_profile_picture"
+        android:icon="@drawable/ic_share"
+        android:title="@string/share_profile_pic_item"
+        app:showAsAction="ifRoom"/>
+
 </menu>

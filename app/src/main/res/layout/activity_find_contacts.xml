@@ -4,17 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".FindFriendsActivity">
+    tools:context=".FindContactActivity">
     <include
         layout="@layout/app_bar_layout"
         android:id="@+id/find_friends_toolbar"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/find_friends_recycler_list"
+        android:id="@+id/contacts_recycler_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginEnd="16dp"
+        android:scrollbarSize="4dp"
+        android:scrollbarThumbVertical="@drawable/search_cursor"
         android:layout_below="@+id/find_friends_toolbar"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"/>
-        />
 </RelativeLayout>

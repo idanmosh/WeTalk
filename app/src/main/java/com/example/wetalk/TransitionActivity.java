@@ -9,7 +9,6 @@ import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.wetalk.Classes.FadeClass;
 import com.example.wetalk.Login.HelloActivity;
 import com.example.wetalk.Login.LoginActivity;
 import com.example.wetalk.Login.ProfileActivity;
@@ -43,6 +42,8 @@ public class TransitionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transition);
 
+        fadeActivity();
+
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
 
         getSharedPreferences();
@@ -52,13 +53,6 @@ public class TransitionActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
 
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        FadeClass fadeClass = new FadeClass(decor);
-        fadeClass.initFade();
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
     }
 
     private void getSharedPreferences() {
@@ -120,5 +114,21 @@ public class TransitionActivity extends AppCompatActivity {
             overridePendingTransition(new Fade().getMode(), new Fade().getMode());
             finish();
         },WELCOME_TIMEOUT);
+    }
+
+    private void fadeActivity() {
+        Fade fade = new Fade();
+        View decor = getWindow().getDecorView();
+        fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
+        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
+        fade.excludeTarget(android.R.id.statusBarBackground,true);
+        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+
+        getWindow().setEnterTransition(fade);
+        getWindow().setExitTransition(fade);
     }
 }
