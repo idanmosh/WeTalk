@@ -1,5 +1,8 @@
 package com.example.wetalk;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -25,6 +28,7 @@ public class TransitionActivity extends AppCompatActivity {
     private static final String Login_State = "loginState";
     private static final String Profile_State = "profileState";
     private static final String Main_State = "mainState";
+    private static final String IMAGE_KEY = "image_key";
 
 
     private SharedPreferences mSharedPreferences;
@@ -45,14 +49,19 @@ public class TransitionActivity extends AppCompatActivity {
         fadeActivity();
 
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
-
+        AccountManager accountManager = (AccountManager) getSystemService(Context.ACCOUNT_SERVICE);
+        assert accountManager != null;
+        Account[] account = accountManager.getAccountsByType(AccountGeneral.ACCOUNT_TYPE);
+        if (account.length == 0) {
+            mSharedPreferences.edit().putBoolean(Main_State, false).apply();
+            mSharedPreferences.edit().putString(IMAGE_KEY, null).apply();
+        }
         getSharedPreferences();
 
         FirebaseApp.initializeApp(this);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
-
     }
 
     private void getSharedPreferences() {

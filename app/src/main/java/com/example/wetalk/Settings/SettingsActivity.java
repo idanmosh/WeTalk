@@ -34,6 +34,7 @@ import com.example.wetalk.Classes.User;
 import com.example.wetalk.MainActivity;
 import com.example.wetalk.Permissions.Permissions;
 import com.example.wetalk.R;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
@@ -42,12 +43,19 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import id.zelory.compressor.Compressor;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -75,6 +83,7 @@ public class SettingsActivity extends AppCompatActivity {
     private String currentUserId;
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
+    private StorageReference userProfileImageRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +95,7 @@ public class SettingsActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         rootRef = FirebaseDatabase.getInstance().getReference();
+        userProfileImageRef = FirebaseStorage.getInstance().getReference().child("Profile Images");
 
         mUserProfileImage = findViewById(R.id.profile_image);
         mUserName = findViewById(R.id.user_name);
@@ -165,11 +175,22 @@ public class SettingsActivity extends AppCompatActivity {
             if (Objects.requireNonNull(input.getText()).toString().length() > 0) {
                 mSharedPreferences.edit().putString(STATUS_KEY, input.getText().toString()).apply();
                 mUserStatus.setText(input.getText().toString());
+                saveToDb();
                 dialog.dismiss();
             }
             else
                 Toast.makeText(this, R.string.STATUS_EMPTY, Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void saveToDb() {
+        rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.STATUS))
+                .setValue(mUserStatus.getText().toString())
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        return;
+                    }
+                });
     }
 
     @SuppressLint("InflateParams")
@@ -296,17 +317,50 @@ public class SettingsActivity extends AppCompatActivity {
                 mProgressBar.setVisibility(View.VISIBLE);
 
                 resultUri = Objects.requireNonNull(result).getUri();
-                mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
-                user.setImage(resultUri.toString());
-                rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(user.getImage())
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                loadImage();
-                                Toast.makeText(SettingsActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
+
+                File actualImage = new File(Objects.requireNonNull(resultUri.getPath()));
+
+                try {
+                    Bitmap compressedImage = new Compressor(this)
+                            .setMaxWidth(250)
+                            .setMaxHeight(250)
+                            .setQuality(50)
+                            .compressToBitmap(actualImage);
+
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
+                    byte[] final_image = outputStream.toByteArray();
+
+                    StorageReference filePath = userProfileImageRef.child(currentUserId + getString(R.string.JPG));
+
+                    UploadTask uploadTask = filePath.putBytes(final_image);
+
+                   uploadTask.addOnSuccessListener(taskSnapshot -> {
+                        if (taskSnapshot.getMetadata() != null) {
+                            Task<Uri> result1 = taskSnapshot.getStorage().getDownloadUrl();
+                            result1.addOnSuccessListener(uri -> {
+                                mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
+                                user.setImage(resultUri.toString());
+                                rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(uri.toString())
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                loadImage();
+                                                Toast.makeText(SettingsActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
+                                                mProgressBar.setVisibility(View.GONE);
+                                            }
+                                        });
                                 mProgressBar.setVisibility(View.GONE);
-                            }
-                        });
-                mProgressBar.setVisibility(View.GONE);
+                            });
+                        }
+                        else {
+                            String message = Objects.requireNonNull(taskSnapshot.getError()).toString();
+                            Toast.makeText(SettingsActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
+                            mProgressBar.setVisibility(View.GONE);
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

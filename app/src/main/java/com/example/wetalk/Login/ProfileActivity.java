@@ -35,12 +35,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import id.zelory.compressor.Compressor;
 
 public class ProfileActivity extends AppCompatActivity {
 
@@ -120,8 +125,16 @@ public class ProfileActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == Permissions.IMAGE_REQUEST) {
-            if (grantResults.length > 0 && grantResults[0] + grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] + grantResults[1] == PackageManager.PERMISSION_GRANTED)
                 cropImage();
+            else
+                Toast.makeText(this, "You can't get access to contacts, photos," +
+                        " media, and files from your device.", Toast.LENGTH_SHORT).show();
+        }
+
+        if (requestCode == Permissions.PROFILE_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] + grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+
             }
         }
     }
@@ -159,30 +172,48 @@ public class ProfileActivity extends AppCompatActivity {
 
                 resultUri = Objects.requireNonNull(result).getUri();
 
-                StorageReference filePath = userProfileImageRef.child(currentUserId + getString(R.string.JPG));
+                File actualImage = new File(Objects.requireNonNull(resultUri.getPath()));
 
-                filePath.putFile(resultUri).addOnSuccessListener(taskSnapshot -> {
-                    if (taskSnapshot.getMetadata() != null) {
-                        Task<Uri> result1 = taskSnapshot.getStorage().getDownloadUrl();
-                        result1.addOnSuccessListener(uri -> {
-                            user.setImage(uri.toString());
-                            mSharedPreferences.edit().putString(IMAGE_KEY, uri.toString()).apply();
-                            rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(user.getImage())
-                                    .addOnCompleteListener(task -> {
-                                        if (task.isSuccessful()) {
-                                            loadImage();
-                                            Toast.makeText(ProfileActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
-                                            mProgressBar.setVisibility(View.GONE);
-                                        }
-                                    });
-                        });
-                    }
-                    else {
-                        String message = Objects.requireNonNull(taskSnapshot.getError()).toString();
-                        Toast.makeText(ProfileActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
-                        mProgressBar.setVisibility(View.GONE);
-                    }
-                });
+                try {
+                    Bitmap compressedImage = new Compressor(this)
+                            .setMaxWidth(250)
+                            .setMaxHeight(250)
+                            .setQuality(50)
+                            .compressToBitmap(actualImage);
+
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
+                    byte[] final_image = outputStream.toByteArray();
+
+                    StorageReference filePath = userProfileImageRef.child(currentUserId + getString(R.string.JPG));
+
+                    UploadTask uploadTask = filePath.putBytes(final_image);
+
+                    uploadTask.addOnSuccessListener(taskSnapshot -> {
+                        if (taskSnapshot.getMetadata() != null) {
+                            Task<Uri> result1 = taskSnapshot.getStorage().getDownloadUrl();
+                            result1.addOnSuccessListener(uri -> {
+                                user.setImage(resultUri.toString());
+                                mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
+                                rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(uri.toString())
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                loadImage();
+                                                Toast.makeText(ProfileActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
+                                                mProgressBar.setVisibility(View.GONE);
+                                            }
+                                        });
+                            });
+                        }
+                        else {
+                            String message = Objects.requireNonNull(taskSnapshot.getError()).toString();
+                            Toast.makeText(ProfileActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
+                            mProgressBar.setVisibility(View.GONE);
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -254,6 +285,7 @@ public class ProfileActivity extends AppCompatActivity {
             Toast.makeText(this, "Status is missing...", Toast.LENGTH_SHORT).show();
         }
         else {
+            saveToDb();
             mSharedPreferences.edit().putString(STATUS_KEY, mUserStatus.getText().toString()).apply();
             mSharedPreferences.edit().putString(NAME_KEY, mUserName.getText().toString()).apply();
             if (user.getImage() != null)
@@ -261,6 +293,16 @@ public class ProfileActivity extends AppCompatActivity {
             mSharedPreferences.edit().putBoolean(Profile_State, false).apply();
             sendUserToMainActivity();
         }
+    }
+
+    private void saveToDb() {
+        rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.STATUS))
+                .setValue(mUserStatus.getText().toString())
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        return;
+                    }
+                });
     }
 
     private void sendUserToMainActivity() {

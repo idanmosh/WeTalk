@@ -1,9 +1,16 @@
 package com.example.wetalk;
 
 import android.app.ProgressDialog;
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.ContactsContract;
 import android.transition.Fade;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +32,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private final static String TITLE = "WeTalk";
     private final static String USERS = "Users";
 
+    private ContactObserver contactObserver;
     private ProgressDialog loadingBar;
     private Toolbar mToolbar, mSearchToolbar;
     private ViewPager mViewPager;
@@ -56,13 +65,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialize() {
+
         fadeActivity();
+
+        AccountGeneral.createSyncAccount(this);
+        SyncAdapter.performSync();
+        contactObserver = new ContactObserver(false);
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
-        userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);
 
+        userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);
 
         mToolbar = findViewById(R.id.main_page_toolbar);
         mSearchToolbar = findViewById(R.id.search_page_toolbar);
@@ -80,6 +94,67 @@ public class MainActivity extends AppCompatActivity {
         loadingBar = new ProgressDialog(this);
         mTabLayout = findViewById(R.id.main_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
+
+    }
+
+    private void addContact() {
+
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+        ops.add(ContentProviderOperation
+                .newInsert(addCallerIsSyncAdapterParameter(
+                        ContactsContract.RawContacts.CONTENT_URI, true))
+                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME,
+                        AccountGeneral.ACCOUNT_NAME)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE,
+                        AccountGeneral.ACCOUNT_TYPE)
+                .withValue(ContactsContract.RawContacts.AGGREGATION_MODE,
+                        ContactsContract.RawContacts.AGGREGATION_MODE_DEFAULT)
+                .build());
+
+        ops.add(ContentProviderOperation
+                .newInsert(addCallerIsSyncAdapterParameter(
+                        ContactsContract.Data.CONTENT_URI, true))
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                .withValue(ContactsContract.Data.MIMETYPE,
+                        ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, "אבא")
+                .build());
+
+        ops.add(ContentProviderOperation
+                .newInsert(addCallerIsSyncAdapterParameter(
+                        ContactsContract.Data.CONTENT_URI, true))
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                .withValue(ContactsContract.Data.MIMETYPE,
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, "0524187704")
+                .build());
+
+        ops.add(ContentProviderOperation
+                .newInsert(addCallerIsSyncAdapterParameter(
+                        ContactsContract.Data.CONTENT_URI, true))
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID,0)
+                .withValue(ContactsContract.Data.MIMETYPE, "vnd.android.cursor.item/com.example.wetalk.profile")
+                .withValue(ContactsContract.Data.DATA1, "0524187704")
+                .withValue(ContactsContract.Data.DATA2, "אבא")
+                .withValue(ContactsContract.Data.DATA3, "הודעה אל +972 52-418-7704")
+                .withYieldAllowed(true).build());
+
+        try {
+            getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
+        if (isSyncOperation) {
+            return uri.buildUpon()
+                    .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER,
+                            "true").build();
+        }
+        return uri;
     }
 
     @Override
@@ -121,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                     mSharedPreferences.edit().clear().apply();
                     currentUser.delete()
                             .addOnCompleteListener(task2 -> {
-                                Toast.makeText( MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "User account deleted.", Toast.LENGTH_SHORT).show();
                                 loadingBar.dismiss();
                                 sendUserToTransitionActivity();
                             });
@@ -158,13 +233,37 @@ public class MainActivity extends AppCompatActivity {
         fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
         fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
         fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
+        fade.excludeTarget(decor.findViewById(R.id.main_tabs), true);
+        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar), true);
+        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar), true);
+        fade.excludeTarget(android.R.id.statusBarBackground, true);
+        fade.excludeTarget(android.R.id.navigationBarBackground, true);
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
     }
+
+
+    private final class ContactObserver extends ContentObserver {
+
+        private ContactObserver(boolean b) {
+            super(new Handler(Looper.getMainLooper()));
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            /*
+             * Invoke the method signature available as of
+             * Android platform version 4.1, with a null URI.
+             */
+            onChange(selfChange, null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri changeUri) {
+            ContentResolver.requestSync(AccountGeneral.getAccount(), ContactsContract.AUTHORITY, null);
+        }
+    }
+
+
 }

@@ -1,29 +1,43 @@
 package com.example.wetalk.Classes;
 
-public class Contacts {
+public class Contact {
+    private String userId;
+    private String rawId;
     private String name;
     private String phone;
     private String image;
+    private String status;
     private String lastMessage;
     private String lastMessageTime;
     private int unreadMessages;
 
-    public Contacts() {
+    public Contact() {
         this.setPhone(null);
         this.setLastMessage(null);
         this.setName(null);
         this.setImage(null);
         this.setUnreadMessages(0);
         this.setLastMessageTime(null);
+        this.setStatus(null);
     }
 
-    public Contacts(String name, String phone, String image, String lastMessage, int unreadMessages, String lastMessageTime){
+    public Contact(String userId, String rawId, String name, String phone, String status, String image) {
+       this.setRawId(rawId);
+       this.setName(name);
+       this.setPhone(phone);
+       this.setStatus(status);
+       this.setImage(image);
+       this.setUserId(userId);
+    }
+
+    public Contact(String name, String phone, String status) {
         this.setPhone(phone);
-        this.setLastMessage(lastMessage);
         this.setName(name);
-        this.setImage(image);
-        this.setUnreadMessages(unreadMessages);
-        this.setLastMessageTime(lastMessageTime);
+        this.setLastMessage(null);
+        this.setImage(null);
+        this.setUnreadMessages(0);
+        this.setLastMessageTime(null);
+        this.setStatus(status);
     }
 
 
@@ -73,5 +87,29 @@ public class Contacts {
 
     public void setLastMessageTime(String lastMessageTime) {
         this.lastMessageTime = lastMessageTime;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getRawId() {
+        return rawId;
+    }
+
+    public void setRawId(String rawId) {
+        this.rawId = rawId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

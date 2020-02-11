@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContactsAccountType
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    viewStreamItemActivity="com.example.wetalk.ViewingActivity">
+    <ContactsDataKind
+        android:mimeType="vnd.android.cursor.item/com.example.wetalk.profile"
+        android:icon="@drawable/logo_image"
+        android:summaryColumn="data2"
+        android:detailColumn="data3" />
+
+</ContactsAccountType>

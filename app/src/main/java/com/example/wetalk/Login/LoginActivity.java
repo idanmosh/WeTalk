@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     private final static String VERIFY_TITLE = "verify_title";
     private final static String USERS = "Users";
     private final static String PHONE = "phone";
+    private final static String CONTACTS = "Contacts";
     private static final String MyPREFERENCES = "MyPrefs";
     private static final String Login_State = "loginState";
     private static final String Profile_State = "profileState";
@@ -57,7 +58,6 @@ public class LoginActivity extends AppCompatActivity {
     private LinearLayout mSendLayout, mVerifyLayout;
     private ProgressDialog loadingBar;
 
-    private String accountType;
     private String mVerificationId, phoneNumber, verificationCode;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
 
@@ -205,6 +205,7 @@ public class LoginActivity extends AppCompatActivity {
                                         loadingBar.dismiss();
                                         mSharedPreferences.edit().putBoolean(Login_State, false).apply();
                                         mVerificationInProgress = false;
+                                        rootRef.child(CONTACTS).child(phoneNumber).setValue(currentUserId);
                                         sendUserToProfileActivity();
                                     }
                                     else {

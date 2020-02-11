@@ -28,18 +28,26 @@ import com.example.wetalk.Classes.AppDir;
 import com.example.wetalk.Classes.User;
 import com.example.wetalk.Permissions.Permissions;
 import com.example.wetalk.R;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import id.zelory.compressor.Compressor;
 
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
@@ -61,6 +69,7 @@ public class ProfileImageActivity extends AppCompatActivity {
     private String currentUserId;
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
+    private StorageReference userProfileImageRef;
     private ProgressDialog loadingBar;
 
     @Override
@@ -73,6 +82,7 @@ public class ProfileImageActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         rootRef = FirebaseDatabase.getInstance().getReference();
+        userProfileImageRef = FirebaseStorage.getInstance().getReference().child("Profile Images");
 
         mImage = findViewById(R.id.shared_profile_image);
         mImage2 = findViewById(R.id.circle_shred_profile_image);
@@ -236,17 +246,50 @@ public class ProfileImageActivity extends AppCompatActivity {
                 loadingBar.show();
 
                 resultUri = Objects.requireNonNull(result).getUri();
-                mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
-                user.setImage(resultUri.toString());
-                rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(user.getImage())
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                loadImage();
+
+                File actualImage = new File(Objects.requireNonNull(resultUri.getPath()));
+
+                try {
+                    Bitmap compressedImage = new Compressor(this)
+                            .setMaxWidth(250)
+                            .setMaxHeight(250)
+                            .setQuality(50)
+                            .compressToBitmap(actualImage);
+
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
+                    byte[] final_image = outputStream.toByteArray();
+
+                    StorageReference filePath = userProfileImageRef.child(currentUserId + getString(R.string.JPG));
+
+                    UploadTask uploadTask = filePath.putBytes(final_image);
+
+                    uploadTask.addOnSuccessListener(taskSnapshot -> {
+                        if (taskSnapshot.getMetadata() != null) {
+                            Task<Uri> result1 = taskSnapshot.getStorage().getDownloadUrl();
+                            result1.addOnSuccessListener(uri -> {
+                                mSharedPreferences.edit().putString(IMAGE_KEY, resultUri.toString()).apply();
+                                user.setImage(resultUri.toString());
+                                rootRef.child(getString(R.string.USERS)).child(currentUserId).child(getString(R.string.IMAGE)).setValue(uri.toString())
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                loadImage();
+                                                loadingBar.dismiss();
+                                                Toast.makeText(ProfileImageActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
                                 loadingBar.dismiss();
-                                Toast.makeText(ProfileImageActivity.this, "Profile image uploaded successfully...", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                loadingBar.dismiss();
+                            });
+                        }
+                        else {
+                            String message = Objects.requireNonNull(taskSnapshot.getError()).toString();
+                            Toast.makeText(ProfileImageActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
+                            loadingBar.dismiss();
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -259,7 +302,6 @@ public class ProfileImageActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
         sendUserToSettingsActivity();
     }
 

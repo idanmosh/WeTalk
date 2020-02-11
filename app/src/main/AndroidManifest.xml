@@ -18,8 +18,11 @@
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.READ_SYNC_STATS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+
 
     <application
         android:allowBackup="true"
@@ -29,6 +32,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".AuthenticatorActivity"></activity>
+        <activity
+            android:name=".ViewingActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter
+                android:scheme="content://com.example.wetalk.provider"
+                tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="vnd.android.cursor.item/com.example.wetalk.profile" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".MyFirebaseMessagingService"
             android:enabled="false"
@@ -81,10 +100,13 @@
         </service>
 
         <provider
-            android:name=".StubProvider"
+            android:name=".ContactsProvider"
             android:authorities="com.example.wetalk.provider"
             android:exported="false"
-            android:syncable="true" />
+            android:label="אנשי קשר"
+            android:readPermission="com.example.wetalk.READ_DATABASE"
+            android:syncable="true"
+            android:writePermission="com.example.wetalk.WRITE_DATABASE" />
 
         <service
             android:name=".SyncService"
@@ -97,6 +119,9 @@
             <meta-data
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter" />
+            <meta-data
+                android:name="android.provider.CONTACTS_STRUCTURE"
+                android:resource="@xml/contacts" />
         </service>
     </application>
 

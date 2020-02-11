@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.example.wetalk.Classes.Contacts;
+import com.example.wetalk.Classes.Contact;
 
 import java.util.List;
 
@@ -23,12 +23,14 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRecyclerViewAdapter.MyViewHolder> {
 
-    Context mContext;
-    List<Contacts> mContactsList;
+    private Context mContext;
+    private List<Contact> mContactsList;
+    private int choice;
 
-    public ContactsRecyclerViewAdapter(Context mContext, List<Contacts> mContactsList) {
+    public ContactsRecyclerViewAdapter(Context mContext, List<Contact> mContactsList, int choice) {
         this.mContext = mContext;
         this.mContactsList = mContactsList;
+        this.choice = choice;
     }
 
     @NonNull
@@ -45,26 +47,37 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
-        holder.tv_name.setText(mContactsList.get(position).getName());
-        holder.tv_phone.setText(mContactsList.get(position).getPhone());
-        loadImage(holder, position);
-        holder.tv_lastMessage.setText(mContactsList.get(position).getLastMessage());
-        holder.tv__lastMessageTime.setText(mContactsList.get(position).getLastMessageTime());
-        holder.tv_unreadMessages.setText(mContactsList.get(position).getUnreadMessages());
+        if (choice == 1) {
+            if (mContactsList.get(position).getImage() != null)
+                loadImage(holder, position);
+            holder.tv_name.setText(mContactsList.get(position).getName());
+            holder.tv_lastMessage.setText(mContactsList.get(position).getPhone());
+            holder.tv__lastMessageTime.setVisibility(View.GONE);
+            holder.tv_unreadMessages.setVisibility(View.GONE);
+        }
+        else {
+            holder.tv_name.setText(mContactsList.get(position).getName());
+            holder.tv_phone.setText(mContactsList.get(position).getPhone());
+
+            holder.tv_lastMessage.setText(mContactsList.get(position).getLastMessage());
+            holder.tv__lastMessageTime.setText(mContactsList.get(position).getLastMessageTime());
+            holder.tv_unreadMessages.setText(mContactsList.get(position).getUnreadMessages());
+        }
+
+        holder.itemView.setOnClickListener(v -> {});
     }
 
     private void loadImage(@NonNull MyViewHolder holder, int position) {
-        Glide.with(mContext).asBitmap().load(mContactsList.get(position)).into(new CustomTarget<Bitmap>() {
+        Glide.with(holder.civ_image.getContext()).asBitmap().load(mContactsList.get(position).getImage()).into(new CustomTarget<Bitmap>() {
             @Override
             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                 holder.civ_image.setImageBitmap(resource);
             }
 
             @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {
-                Glide.with(mContext).load(placeholder).into(holder.civ_image);
-            }
+            public void onLoadCleared(@Nullable Drawable placeholder) { }
         });
+
     }
 
     @Override
