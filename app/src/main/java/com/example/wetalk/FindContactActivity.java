@@ -87,7 +87,6 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         DBHandler contactsDB = new DBHandler(this);
-        contactsDB.deleteContacts();
 
         ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
                 FindContactActivity.this, contactsDB.getContacts(),1);
