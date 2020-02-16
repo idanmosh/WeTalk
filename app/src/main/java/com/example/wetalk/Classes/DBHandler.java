@@ -70,6 +70,38 @@ public class DBHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    public Contact getContactByPhone(String phone) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        Cursor cursor = db.query(CONTACTS_TABLE,
+                new String[] {RAW_ID, USER_ID, NAME, NUMBER, STATUS, IMAGE},
+                NUMBER + " =?",
+                new String[] {phone},
+                null, null,null,null);
+
+        Contact contact;
+
+        if (cursor != null) {
+            if (cursor.getCount() > 0)
+                cursor.moveToFirst();
+            else
+                return null;
+
+            contact = new Contact(cursor.getString(0),
+                    cursor.getString(1),
+                    cursor.getString(2),
+                    cursor.getString(3),
+                    cursor.getString(4),
+                    cursor.getString(5)
+            );
+
+            cursor.close();
+            return contact;
+        }
+
+        return null;
+    }
+
     public Contact getContact(String id) {
         SQLiteDatabase db = getReadableDatabase();
 
@@ -131,6 +163,22 @@ public class DBHandler extends SQLiteOpenHelper {
         db.delete(CONTACTS_TABLE, null, null);
         db.close();
     }
+
+    public void updateContact(Contact contact) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(RAW_ID, contact.getRawId());
+        values.put(USER_ID, contact.getUserId());
+        values.put(NAME, contact.getName());
+        values.put(NUMBER,contact.getPhone());
+        values.put(STATUS,contact.getStatus());
+        values.put(IMAGE, contact.getImage());
+
+        db.update(CONTACTS_TABLE, values, NUMBER + " =?", new String[] {contact.getPhone()});
+        db.close();
+    }
+
 
     public void deleteContact(String id) {
         SQLiteDatabase db = getWritableDatabase();

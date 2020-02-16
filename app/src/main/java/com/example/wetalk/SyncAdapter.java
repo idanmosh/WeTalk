@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 
 import com.example.wetalk.Classes.Contact;
 import com.example.wetalk.Classes.DBHandler;
+import com.example.wetalk.Permissions.Permissions;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -26,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,12 +35,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private final ContentResolver mResolver;
     private Context mContext;
+    private DBHandler contactsDB;
 
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
         mContext = context;
         mResolver = context.getContentResolver();
         FirebaseApp.initializeApp(context);
+        contactsDB = new DBHandler(mContext);
     }
 
     public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
@@ -46,6 +50,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mContext = context;
         mResolver = context.getContentResolver();
         FirebaseApp.initializeApp(context);
+        contactsDB = new DBHandler(mContext);
     }
 
     @Override
@@ -57,10 +62,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private void syncContacts(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         List<Contact> tempContactsList;
         DatabaseReference rootRef;
-        DBHandler contactsDB = new DBHandler(mContext);
+        HashMap<String, String> phoneTable = new HashMap<>();
 
         tempContactsList = new ArrayList<>();
         rootRef = FirebaseDatabase.getInstance().getReference();
+
+        if (Permissions.checkPermissions(mContext, Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS)) {
+            return;
+        }
 
         Cursor cursor = mResolver.query(ContactsContract.Contacts.CONTENT_URI,
                 null,
@@ -68,80 +77,117 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 null,
                 null);
 
-        if (Objects.requireNonNull(cursor).getCount() > 0 && cursor.moveToFirst()) {
-
+        if (cursor.getCount() > 0) {
             while (cursor.moveToNext()) {
-                Contact contact = new Contact();
-                contact.setName(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)));
-                contact.setRawId(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID)));
+                String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
 
                 if (cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
                     Cursor cursorInfo = mResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " =?",
-                            new String[]{contact.getRawId()}, null);
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " =?", new String[] {id}, null);
 
-                    if (Objects.requireNonNull(cursorInfo).getCount() > 0 && cursorInfo.moveToFirst()) {
-
-                        while (cursorInfo.moveToNext()) {
-                            String phone = cursorInfo.getString(cursorInfo.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                            if (phone != null) {
-                                if (isValidNumber(phone)) {
-                                    contact.setPhone(cursorInfo.getString(
-                                            cursorInfo.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-                                    tempContactsList.add(contact);
-                                }
-                            }
-                            break;
+                    while (cursorInfo.moveToNext()) {
+                        String phone = generatePhoneNumber(
+                                cursorInfo.getString(cursorInfo.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+                        if (!phoneTable.containsKey(phone)) {
+                            phoneTable.put(phone, phone);
+                            Contact contact = new Contact();
+                            contact.setRawId(id);
+                            contact.setPhone(cursorInfo.getString(cursorInfo.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+                            contact.setName(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)));
+                            tempContactsList.add(contact);
                         }
-                        cursorInfo.close();
                     }
+                    cursorInfo.close();
                 }
             }
             cursor.close();
+        }
 
-            rootRef.child("Contacts").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot1) {
-                    rootRef.child(mContext.getString(R.string.USERS)).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot2) {
-                            if (dataSnapshot1.exists()) {
-                                for (int i = 0; i < tempContactsList.size(); i++) {
-                                    if (dataSnapshot1.hasChild(generatePhoneNumber(tempContactsList.get(i).getPhone()))) {
-                                        tempContactsList.get(i).setUserId(Objects.requireNonNull(dataSnapshot1.child(
-                                                generatePhoneNumber(tempContactsList.get(i).getPhone())).getValue()).toString());
+        rootRef.child("Contacts").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot1) {
+                rootRef.child(mContext.getString(R.string.USERS)).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot2) {
+                        if (dataSnapshot1.exists()) {
+                            for (int i = 0; i < tempContactsList.size(); i++) {
+                                if (dataSnapshot1.hasChild(generatePhoneNumber(tempContactsList.get(i).getPhone()))) {
+                                    tempContactsList.get(i).setUserId(Objects.requireNonNull(dataSnapshot1.child(
+                                            generatePhoneNumber(tempContactsList.get(i).getPhone())).getValue()).toString());
 
-                                        if (tempContactsList.get(i).getUserId() != null) {
-                                            if (dataSnapshot2.exists()) {
-                                                if (dataSnapshot2.hasChild(tempContactsList.get(i).getUserId())) {
-                                                    tempContactsList.get(i).setStatus(Objects.requireNonNull(dataSnapshot2.child(
-                                                            tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.STATUS)).getValue()).toString());
+                                    if (tempContactsList.get(i).getUserId() != null) {
+                                        if (dataSnapshot2.exists()) {
+                                            if (dataSnapshot2.hasChild(tempContactsList.get(i).getUserId())) {
+                                                tempContactsList.get(i).setStatus(Objects.requireNonNull(dataSnapshot2.child(
+                                                        tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.STATUS)).getValue()).toString());
 
-                                                    tempContactsList.get(i).setImage(Objects.requireNonNull(dataSnapshot2.child(
-                                                            tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue()).toString());
+                                                tempContactsList.get(i).setImage(Objects.requireNonNull(dataSnapshot2.child(
+                                                        tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue()).toString());
+                                                if (contactsDB.getContactByPhone(tempContactsList.get(i).getPhone()) == null) {
+                                                    contactsDB.addContact(tempContactsList.get(i));
+                                                    addContact(tempContactsList.get(i));
                                                 }
-                                                addContact(tempContactsList.get(i));
-                                                contactsDB.addContact(tempContactsList.get(i));
+                                                else {
+                                                    contactsDB.updateContact(tempContactsList.get(i));
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                    }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                            databaseError.getMessage();
-                        }
-                    });
-                }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        databaseError.getMessage();
+                    }
+                });
+            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    databaseError.getMessage();
-                }
-            });
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                databaseError.getMessage();
+            }
+        });
+    }
+
+    private void deleteContact(Contact contact) {
+
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+        Cursor cursor =  mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                null,
+                ContactsContract.RawContacts.ACCOUNT_TYPE + " =?",
+                new String[] {AccountGeneral.ACCOUNT_TYPE},
+                null);
+
+        while (cursor.moveToNext()) {
+            Uri rawUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+
+            ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI).
+                    withSelection(ContactsContract.RawContacts._ID + "=? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ "=? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ "=?"
+                            ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                    AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
+
+            ops.add(ContentProviderOperation.newDelete(rawUri).
+                    withSelection(ContactsContract.RawContacts._ID + "=? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ "=? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ "=?"
+                            ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                    AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build());
+
+            try {
+                mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
+        cursor.close();
     }
 
     private void addContact(Contact contact) {
@@ -155,8 +201,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         AccountGeneral.ACCOUNT_NAME)
                 .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE,
                         AccountGeneral.ACCOUNT_TYPE)
-                .withValue(ContactsContract.RawContacts.AGGREGATION_MODE,
-                        ContactsContract.RawContacts.AGGREGATION_MODE_DEFAULT)
                 .build());
 
         ops.add(ContentProviderOperation
@@ -200,17 +244,26 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private String generatePhoneNumber(String number) {
-        String phone = number;
+        StringBuilder phone = new StringBuilder();
 
-        phone = phone.replaceAll("[ -]+", "");
+        if (number.length() > 9)
+            number = number.substring(1);
+
+        for (int i=0; i < number.length();i++) {
+            if (i == 0 && number.charAt(i) == '+')
+                phone.append(number.charAt(i));
+
+            if (number.charAt(i) >= '0' && number.charAt(i) <= '9')
+                phone.append(number.charAt(i));
+        }
         TelephonyManager tm = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
         String SIMCountryISO = Objects.requireNonNull(tm).getSimCountryIso().toUpperCase();
         String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(SIMCountryISO);
 
-        if (!phone.contains(countryCode))
-            phone = countryCode + phone;
+        if (!phone.toString().contains(countryCode))
+            phone.insert(0, countryCode);
 
-        return phone;
+        return phone.toString();
     }
 
     private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {

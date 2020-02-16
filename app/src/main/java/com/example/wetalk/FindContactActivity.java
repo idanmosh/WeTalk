@@ -7,6 +7,7 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
@@ -24,7 +25,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,37 +77,57 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(this, ContactsContract.Contacts.CONTENT_URI,
+        return new CursorLoader(this, ContactsContract.RawContacts.CONTENT_URI,
                 null,
-                null,
-                null,
+                ContactsContract.RawContacts.ACCOUNT_TYPE + " =?",
+                new String[] {AccountGeneral.ACCOUNT_TYPE},
                 null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        tempContactsList = new ArrayList<>();
-        DBHandler dbHandler = new DBHandler(this);
-
-
+        DBHandler contactsDB = new DBHandler(this);
+        contactsDB.deleteContacts();
 
         ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
-                FindContactActivity.this, dbHandler.getContacts(),1);
+                FindContactActivity.this, contactsDB.getContacts(),1);
         contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
     }
 
     private String generatePhoneNumber(String number) {
-        String phone = number;
+        StringBuilder phone = new StringBuilder();
 
-        phone = phone.replaceAll("[ -]+", "");
+        if (number.length() > 9)
+            number = number.substring(1);
+
+        for (int i=0; i < number.length();i++) {
+            if (i == 0 && number.charAt(i) == '+')
+                phone.append(number.charAt(i));
+
+            if (number.charAt(i) >= '0' && number.charAt(i) <= '9')
+                phone.append(number.charAt(i));
+        }
         TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         String SIMCountryISO = Objects.requireNonNull(tm).getSimCountryIso().toUpperCase();
         String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(SIMCountryISO);
 
-        if (!phone.contains(countryCode))
-            phone = countryCode + phone;
+        if (!phone.toString().contains(countryCode))
+            phone.insert(0, countryCode);
 
-        return phone;
+        return phone.toString();
+    }
+
+    private boolean isValidNumber(String phone) {
+        return phone.replaceAll("[0-9+]+","").equals("");
+    }
+
+    private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
+        if (isSyncOperation) {
+            return uri.buildUpon()
+                    .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER,
+                            "true").build();
+        }
+        return uri;
     }
 
     @Override
