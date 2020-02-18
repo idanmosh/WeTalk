@@ -55,11 +55,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        syncContacts(account,extras,authority,provider,syncResult);
-
+        syncContactsWithDb(account,extras,authority,provider,syncResult);
     }
 
-    private void syncContacts(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+    private void syncContactsWithDb(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         List<Contact> tempContactsList;
         DatabaseReference rootRef;
         HashMap<String, String> phoneTable = new HashMap<>();
@@ -127,9 +126,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                                     contactsDB.addContact(tempContactsList.get(i));
                                                     addContact(tempContactsList.get(i));
                                                 }
-                                                else {
-                                                    contactsDB.updateContact(tempContactsList.get(i));
-                                                }
+                                                //else if (checkForUpdate(tempContactsList.get(i))){
+                                                    //contactsDB.updateContact(tempContactsList.get(i));
+                                                //}
                                             }
                                         }
                                     }
@@ -152,7 +151,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         });
     }
 
+    private boolean checkForUpdate(Contact contact) {
+        Contact contact1 = contactsDB.getContactByPhone(contact.getPhone());
+        return !contact.getRawId().equals(contact1.getRawId()) || !contact.getPhone().equals(contact1.getPhone()) ||
+                !contact.getImage().equals(contact1.getImage()) || !contact.getUserId().equals(contact1.getUserId()) ||
+                !contact.getStatus().equals(contact1.getStatus()) || !contact.getName().equals(contact1.getName());
+    }
+
     private void deleteContact(Contact contact) {
+
+        contactsDB.deleteContacts();
 
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
@@ -166,16 +174,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             Uri rawUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
 
             ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI).
-                    withSelection(ContactsContract.RawContacts._ID + "=? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ "=? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ "=?"
+                    withSelection(ContactsContract.RawContacts._ID + " =? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ " =? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ " =?"
                             ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
-                                    AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
+                                    AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
 
             ops.add(ContentProviderOperation.newDelete(rawUri).
-                    withSelection(ContactsContract.RawContacts._ID + "=? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ "=? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ "=?"
+                    withSelection(ContactsContract.RawContacts._ID + " =? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ " =? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ " =?"
                             ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
                                     AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build());
 
@@ -246,7 +254,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private String generatePhoneNumber(String number) {
         StringBuilder phone = new StringBuilder();
 
-        if (number.length() > 9)
+        if (number.length() == 10)
             number = number.substring(1);
 
         for (int i=0; i < number.length();i++) {

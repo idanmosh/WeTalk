@@ -1,12 +1,8 @@
 package com.example.wetalk;
 
-import android.app.LoaderManager;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -28,7 +24,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import java.util.List;
 import java.util.Objects;
 
-public class FindContactActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class FindContactActivity extends AppCompatActivity {
 
     private Toolbar mToolBar;
     private RecyclerView contactsRecyclerView;
@@ -51,12 +47,17 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
 
         mToolBar = findViewById(R.id.find_friends_toolbar);
         setSupportActionBar(mToolBar);
-        getLoaderManager().initLoader(0, null, this);
 
         Objects.requireNonNull(getSupportActionBar()).setTitle("Select Contact");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         mToolBar.setNavigationOnClickListener(v -> sendUserToMainActivity());
+
+        DBHandler contactsDB = new DBHandler(this);
+
+        ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
+                FindContactActivity.this, contactsDB.getContacts(),1);
+        contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
     }
 
     private void fadeActivity() {
@@ -73,24 +74,6 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(this, ContactsContract.RawContacts.CONTENT_URI,
-                null,
-                ContactsContract.RawContacts.ACCOUNT_TYPE + " =?",
-                new String[] {AccountGeneral.ACCOUNT_TYPE},
-                null);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        DBHandler contactsDB = new DBHandler(this);
-
-        ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
-                FindContactActivity.this, contactsDB.getContacts(),1);
-        contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
     }
 
     private String generatePhoneNumber(String number) {
@@ -128,9 +111,6 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
         }
         return uri;
     }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {  }
 
     private void sendUserToMainActivity() {
         Intent findContactIntent = new Intent(FindContactActivity.this, MainActivity.class);
