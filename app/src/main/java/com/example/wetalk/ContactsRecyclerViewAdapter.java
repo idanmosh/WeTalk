@@ -51,7 +51,7 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
             if (mContactsList.get(position).getImage() != null)
                 loadImage(holder, position);
             holder.tv_name.setText(mContactsList.get(position).getName());
-            holder.tv_lastMessage.setText(mContactsList.get(position).getPhone());
+            holder.tv_lastMessage.setText(mContactsList.get(position).getStatus());
             holder.tv__lastMessageTime.setVisibility(View.GONE);
             holder.tv_unreadMessages.setVisibility(View.GONE);
         }

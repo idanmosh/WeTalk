@@ -3,9 +3,7 @@ package com.example.wetalk;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
 import android.transition.Fade;
 import android.view.View;
@@ -97,19 +95,6 @@ public class FindContactActivity extends AppCompatActivity {
             phone.insert(0, countryCode);
 
         return phone.toString();
-    }
-
-    private boolean isValidNumber(String phone) {
-        return phone.replaceAll("[0-9+]+","").equals("");
-    }
-
-    private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
-        if (isSyncOperation) {
-            return uri.buildUpon()
-                    .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER,
-                            "true").build();
-        }
-        return uri;
     }
 
     private void sendUserToMainActivity() {

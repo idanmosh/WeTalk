@@ -36,6 +36,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private final ContentResolver mResolver;
     private Context mContext;
     private DBHandler contactsDB;
+    private DatabaseReference rootRef;
 
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -43,6 +44,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mResolver = context.getContentResolver();
         FirebaseApp.initializeApp(context);
         contactsDB = new DBHandler(mContext);
+        rootRef = FirebaseDatabase.getInstance().getReference();
     }
 
     public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
@@ -51,24 +53,78 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mResolver = context.getContentResolver();
         FirebaseApp.initializeApp(context);
         contactsDB = new DBHandler(mContext);
+        rootRef = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        syncContactsWithDb(account,extras,authority,provider,syncResult);
+        if (!Permissions.checkPermissions(mContext, Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS)) {
+            syncContactsWithDb(account,extras,authority,provider,syncResult);
+            deleteUnusedContacts();
+        }
+    }
+
+    private void deleteUnusedContacts() {
+        List<Contact> contactsList = contactsDB.getContacts();
+
+        for (int i = 0; i < contactsList.size() ; i++) {
+            Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                    null,
+                    ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
+                            ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
+                            ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
+                    new String[] {contactsList.get(i).getRawId(),
+                            AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
+                    null);
+
+            if (Objects.requireNonNull(cursor).getCount() == 0) {
+                deleteContact(contactsList.get(i));
+                contactsDB.deleteContact(contactsList.get(i).getRawId());
+            }
+
+            cursor.close();
+        }
+
+        rootRef.child("Contacts").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    for (int i = 0; i < contactsList.size(); i++) {
+                        if (!dataSnapshot.hasChild(generatePhoneNumber(contactsList.get(i).getPhone()))) {
+                            deleteContact(contactsList.get(i));
+                            contactsDB.deleteContact(contactsList.get(i).getRawId());
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                databaseError.getMessage();
+            }
+        });
+    }
+
+    private boolean checkIfContactExist(Contact contact) {
+        Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                null,
+                ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
+                        ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
+                        ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
+                new String[] {contact.getRawId(),
+                        AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
+                null);
+
+        return cursor.getCount() == 0;
     }
 
     private void syncContactsWithDb(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         List<Contact> tempContactsList;
-        DatabaseReference rootRef;
+
         HashMap<String, String> phoneTable = new HashMap<>();
 
         tempContactsList = new ArrayList<>();
-        rootRef = FirebaseDatabase.getInstance().getReference();
 
-        if (Permissions.checkPermissions(mContext, Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS)) {
-            return;
-        }
 
         Cursor cursor = mResolver.query(ContactsContract.Contacts.CONTENT_URI,
                 null,
@@ -122,13 +178,13 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
                                                 tempContactsList.get(i).setImage(Objects.requireNonNull(dataSnapshot2.child(
                                                         tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue()).toString());
-                                                if (contactsDB.getContactByPhone(tempContactsList.get(i).getPhone()) == null) {
+                                                if (checkIfContactExist(tempContactsList.get(i))) {
                                                     contactsDB.addContact(tempContactsList.get(i));
                                                     addContact(tempContactsList.get(i));
                                                 }
-                                                //else if (checkForUpdate(tempContactsList.get(i))){
-                                                    //contactsDB.updateContact(tempContactsList.get(i));
-                                                //}
+                                                else if (checkForUpdate(tempContactsList.get(i))){
+                                                    contactsDB.updateContact(tempContactsList.get(i));
+                                                }
                                             }
                                         }
                                     }
@@ -160,14 +216,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void deleteContact(Contact contact) {
 
-        contactsDB.deleteContacts();
-
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
-        Cursor cursor =  mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
+        Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
                 null,
-                ContactsContract.RawContacts.ACCOUNT_TYPE + " =?",
-                new String[] {AccountGeneral.ACCOUNT_TYPE},
+                ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
+                        ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
+                        ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
+                new String[] {contact.getRawId(),
+                        AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
                 null);
 
         while (cursor.moveToNext()) {
@@ -175,15 +232,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
             ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI).
                     withSelection(ContactsContract.RawContacts._ID + " =? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ " =? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ " =?"
+                                    + ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
+                                    + ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
                             ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
                                     AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
 
             ops.add(ContentProviderOperation.newDelete(rawUri).
                     withSelection(ContactsContract.RawContacts._ID + " =? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_TYPE+ " =? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_NAME+ " =?"
+                                    +ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
+                                    +ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
                             ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
                                     AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build());
 
@@ -194,7 +251,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 e.printStackTrace();
             }
         }
-
         cursor.close();
     }
 
@@ -247,14 +303,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private boolean isValidNumber(String phone) {
-        return phone.replaceAll("[0-9+]+","").equals("");
-    }
-
     private String generatePhoneNumber(String number) {
         StringBuilder phone = new StringBuilder();
 
-        if (number.length() == 10)
+        TelephonyManager tm = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
+        String SIMCountryISO = Objects.requireNonNull(tm).getSimCountryIso().toUpperCase();
+        String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(SIMCountryISO);
+
+        if (!number.contains(countryCode))
             number = number.substring(1);
 
         for (int i=0; i < number.length();i++) {
@@ -264,9 +320,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             if (number.charAt(i) >= '0' && number.charAt(i) <= '9')
                 phone.append(number.charAt(i));
         }
-        TelephonyManager tm = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        String SIMCountryISO = Objects.requireNonNull(tm).getSimCountryIso().toUpperCase();
-        String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(SIMCountryISO);
+
 
         if (!phone.toString().contains(countryCode))
             phone.insert(0, countryCode);
