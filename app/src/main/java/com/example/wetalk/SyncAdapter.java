@@ -306,9 +306,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private String generatePhoneNumber(String number) {
         StringBuilder phone = new StringBuilder();
 
-        TelephonyManager tm = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        String SIMCountryISO = Objects.requireNonNull(tm).getSimCountryIso().toUpperCase();
-        String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(SIMCountryISO);
+        String locale = mContext.getResources().getConfiguration().locale.getCountry();
+        String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(locale);
 
         if (!number.contains(countryCode))
             number = number.substring(1);
