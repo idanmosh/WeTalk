@@ -11,7 +11,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.telephony.TelephonyManager;
 
 import androidx.annotation.NonNull;
 
@@ -67,32 +66,38 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private void deleteUnusedContacts() {
         List<Contact> contactsList = contactsDB.getContacts();
 
-        for (int i = 0; i < contactsList.size() ; i++) {
-            Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
-                    null,
-                    ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
-                            ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
-                            ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
-                    new String[] {contactsList.get(i).getRawId(),
-                            AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
-                    null);
 
-            if (Objects.requireNonNull(cursor).getCount() == 0) {
-                deleteContact(contactsList.get(i));
-                contactsDB.deleteContact(contactsList.get(i).getRawId());
+        synchronized (contactsList) {
+            for (int i = 0; i < contactsList.size() ; i++) {
+                Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                        null,
+                        ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
+                                ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
+                                ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
+                        new String[] {contactsList.get(i).getRawId(),
+                                AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
+                        null);
+
+                assert cursor != null;
+                if (cursor.getCount() == 0) {
+                    deleteContact(contactsList.get(i));
+                    contactsDB.deleteContact(contactsList.get(i).getRawId());
+                }
+
+                cursor.close();
             }
-
-            cursor.close();
         }
 
         rootRef.child("Contacts").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()){
-                    for (int i = 0; i < contactsList.size(); i++) {
-                        if (!dataSnapshot.hasChild(generatePhoneNumber(contactsList.get(i).getPhone()))) {
-                            deleteContact(contactsList.get(i));
-                            contactsDB.deleteContact(contactsList.get(i).getRawId());
+                    synchronized (contactsList) {
+                        for (int i = 0; i < contactsList.size(); i++) {
+                            if (!dataSnapshot.hasChild(generatePhoneNumber(contactsList.get(i).getPhone()))) {
+                                deleteContact(contactsList.get(i));
+                                contactsDB.deleteContact(contactsList.get(i).getRawId());
+                            }
                         }
                     }
                 }
@@ -115,7 +120,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
                 null);
 
-        return cursor.getCount() == 0;
+        boolean check;
+
+        assert cursor != null;
+        check = cursor.getCount() == 0;
+        cursor.close();
+        return check;
     }
 
     private void syncContactsWithDb(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
@@ -132,6 +142,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 null,
                 null);
 
+        assert cursor != null;
         if (cursor.getCount() > 0) {
             while (cursor.moveToNext()) {
                 String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
@@ -140,6 +151,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     Cursor cursorInfo = mResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                             ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " =?", new String[] {id}, null);
 
+                    assert cursorInfo != null;
                     while (cursorInfo.moveToNext()) {
                         String phone = generatePhoneNumber(
                                 cursorInfo.getString(cursorInfo.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
@@ -227,28 +239,31 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
                 null);
 
-        while (cursor.moveToNext()) {
-            Uri rawUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+        assert cursor != null;
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                Uri rawUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
 
-            ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI).
-                    withSelection(ContactsContract.RawContacts._ID + " =? AND "
-                                    + ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
-                                    + ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
-                            ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
-                                    AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
+                ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI).
+                        withSelection(ContactsContract.RawContacts._ID + " =? AND "
+                                        + ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
+                                        + ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
+                                ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                        AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
 
-            ops.add(ContentProviderOperation.newDelete(rawUri).
-                    withSelection(ContactsContract.RawContacts._ID + " =? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
-                                    +ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
-                            ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
-                                    AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build());
+                ops.add(ContentProviderOperation.newDelete(rawUri).
+                        withSelection(ContactsContract.RawContacts._ID + " =? AND "
+                                        +ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
+                                        +ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
+                                ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                        AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build());
 
-            try {
-                mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
+                try {
+                    mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
         cursor.close();
