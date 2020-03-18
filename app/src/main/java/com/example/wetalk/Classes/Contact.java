@@ -11,6 +11,16 @@ public class Contact {
     private String lastMessageTime;
     private int unreadMessages;
 
+    public Contact(Contact contact) {
+        this.setPhone(contact.getPhone());
+        this.setName(contact.getName());
+        this.setLastMessage(contact.getLastMessage());
+        this.setImage(contact.getImage());
+        this.setUnreadMessages(contact.getUnreadMessages());
+        this.setLastMessageTime(contact.getLastMessageTime());
+        this.setStatus(contact.getStatus());
+    }
+
     public Contact() {
         this.setPhone(null);
         this.setLastMessage(null);

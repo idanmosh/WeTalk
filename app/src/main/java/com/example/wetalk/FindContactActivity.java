@@ -3,7 +3,9 @@ package com.example.wetalk;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
 import android.transition.Fade;
 import android.view.View;
@@ -14,11 +16,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wetalk.Classes.Contact;
-import com.example.wetalk.Classes.DBHandler;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +28,6 @@ public class FindContactActivity extends AppCompatActivity {
 
     private Toolbar mToolBar;
     private RecyclerView contactsRecyclerView;
-    private List<Contact> tempContactsList;
     private ContentResolver mResolver;
     private DatabaseReference rootRef;
 
@@ -51,10 +52,34 @@ public class FindContactActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         mToolBar.setNavigationOnClickListener(v -> sendUserToMainActivity());
 
-        DBHandler contactsDB = new DBHandler(this);
+        Cursor c = mResolver.query(ContactsContract.Data.CONTENT_URI,
+                null,
+                ContactsContract.Data.MIMETYPE + " =?",
+                new String[] {"vnd.android.cursor.item/com.example.wetalk.profile"},
+                null);
+        assert c != null;
+        List<Contact> contactsList = new ArrayList<>();
+
+
+        if (c.getCount() > 0) {
+           while (c.moveToNext()) {
+               String id = c.getString(c.getColumnIndex(ContactsContract.Data.DATA7));
+               String phone = c.getString(c.getColumnIndex(ContactsContract.Data.DATA1));
+               String name = c.getString(c.getColumnIndex(ContactsContract.Data.DATA2));
+               String userId = c.getString(c.getColumnIndex(ContactsContract.Data.DATA4));
+               String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
+               String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
+
+               contactsList.add(new Contact(userId,id,name,phone,status,image));
+           }
+        }
+
+
+
+        c.close();
 
         ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
-                FindContactActivity.this, contactsDB.getContacts(),1);
+                FindContactActivity.this, contactsList,1);
         contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
     }
 

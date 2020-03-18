@@ -1,16 +1,10 @@
 package com.example.wetalk;
 
 import android.app.ProgressDialog;
-import android.content.ContentProviderOperation;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.provider.ContactsContract;
 import android.transition.Fade;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,7 +26,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.ArrayList;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -70,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         AccountGeneral.createSyncAccount(this);
         SyncAdapter.performSync();
-        contactObserver = new ContactObserver(false);
+        contactObserver = new ContactObserver();
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -95,66 +88,6 @@ public class MainActivity extends AppCompatActivity {
         mTabLayout = findViewById(R.id.main_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
 
-    }
-
-    private void addContact() {
-
-        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-
-        ops.add(ContentProviderOperation
-                .newInsert(addCallerIsSyncAdapterParameter(
-                        ContactsContract.RawContacts.CONTENT_URI, true))
-                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME,
-                        AccountGeneral.ACCOUNT_NAME)
-                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE,
-                        AccountGeneral.ACCOUNT_TYPE)
-                .withValue(ContactsContract.RawContacts.AGGREGATION_MODE,
-                        ContactsContract.RawContacts.AGGREGATION_MODE_DEFAULT)
-                .build());
-
-        ops.add(ContentProviderOperation
-                .newInsert(addCallerIsSyncAdapterParameter(
-                        ContactsContract.Data.CONTENT_URI, true))
-                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-                .withValue(ContactsContract.Data.MIMETYPE,
-                        ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-                .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, "אבא")
-                .build());
-
-        ops.add(ContentProviderOperation
-                .newInsert(addCallerIsSyncAdapterParameter(
-                        ContactsContract.Data.CONTENT_URI, true))
-                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-                .withValue(ContactsContract.Data.MIMETYPE,
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, "0524187704")
-                .build());
-
-        ops.add(ContentProviderOperation
-                .newInsert(addCallerIsSyncAdapterParameter(
-                        ContactsContract.Data.CONTENT_URI, true))
-                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID,0)
-                .withValue(ContactsContract.Data.MIMETYPE, "vnd.android.cursor.item/com.example.wetalk.profile")
-                .withValue(ContactsContract.Data.DATA1, "0524187704")
-                .withValue(ContactsContract.Data.DATA2, "אבא")
-                .withValue(ContactsContract.Data.DATA3, "הודעה אל +972 52-418-7704")
-                .withYieldAllowed(true).build());
-
-        try {
-            getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static Uri addCallerIsSyncAdapterParameter(Uri uri, boolean isSyncOperation) {
-        if (isSyncOperation) {
-            return uri.buildUpon()
-                    .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER,
-                            "true").build();
-        }
-        return uri;
     }
 
     @Override
@@ -243,26 +176,18 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setExitTransition(fade);
     }
 
-
     private final class ContactObserver extends ContentObserver {
 
-        private ContactObserver(boolean b) {
-            super(new Handler(Looper.getMainLooper()));
+        private ContactObserver() {
+            super(null);
         }
 
         @Override
         public void onChange(boolean selfChange) {
-            /*
-             * Invoke the method signature available as of
-             * Android platform version 4.1, with a null URI.
-             */
-            onChange(selfChange, null);
+
+            super.onChange(selfChange);
         }
 
-        @Override
-        public void onChange(boolean selfChange, Uri changeUri) {
-            ContentResolver.requestSync(AccountGeneral.getAccount(), ContactsContract.AUTHORITY, null);
-        }
     }
 
 

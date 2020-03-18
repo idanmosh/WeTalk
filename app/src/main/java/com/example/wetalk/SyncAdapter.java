@@ -15,7 +15,6 @@ import android.provider.ContactsContract;
 import androidx.annotation.NonNull;
 
 import com.example.wetalk.Classes.Contact;
-import com.example.wetalk.Classes.DBHandler;
 import com.example.wetalk.Permissions.Permissions;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -34,7 +33,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private final ContentResolver mResolver;
     private Context mContext;
-    private DBHandler contactsDB;
     private DatabaseReference rootRef;
 
     public SyncAdapter(Context context, boolean autoInitialize) {
@@ -42,7 +40,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mContext = context;
         mResolver = context.getContentResolver();
         FirebaseApp.initializeApp(context);
-        contactsDB = new DBHandler(mContext);
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
 
@@ -51,7 +48,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mContext = context;
         mResolver = context.getContentResolver();
         FirebaseApp.initializeApp(context);
-        contactsDB = new DBHandler(mContext);
         rootRef = FirebaseDatabase.getInstance().getReference();
     }
 
@@ -59,82 +55,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         if (!Permissions.checkPermissions(mContext, Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS)) {
             syncContactsWithDb(account,extras,authority,provider,syncResult);
-            deleteUnusedContacts();
         }
     }
 
-    private void deleteUnusedContacts() {
-        List<Contact> contactsList = contactsDB.getContacts();
 
-
-        synchronized (contactsList) {
-            for (int i = 0; i < contactsList.size() ; i++) {
-                Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
-                        null,
-                        ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
-                                ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
-                                ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
-                        new String[] {contactsList.get(i).getRawId(),
-                                AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
-                        null);
-
-                assert cursor != null;
-                if (cursor.getCount() == 0) {
-                    deleteContact(contactsList.get(i));
-                    contactsDB.deleteContact(contactsList.get(i).getRawId());
-                }
-
-                cursor.close();
-            }
-        }
-
-        rootRef.child("Contacts").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
-                    synchronized (contactsList) {
-                        for (int i = 0; i < contactsList.size(); i++) {
-                            if (!dataSnapshot.hasChild(generatePhoneNumber(contactsList.get(i).getPhone()))) {
-                                deleteContact(contactsList.get(i));
-                                contactsDB.deleteContact(contactsList.get(i).getRawId());
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                databaseError.getMessage();
-            }
-        });
-    }
-
-    private boolean checkIfContactExist(Contact contact) {
-        Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
-                null,
-                ContactsContract.RawContacts.CONTACT_ID + " =? AND " +
-                        ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
-                        ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
-                new String[] {contact.getRawId(),
-                        AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
-                null);
-
-        boolean check;
-
-        assert cursor != null;
-        check = cursor.getCount() == 0;
-        cursor.close();
-        return check;
-    }
 
     private void syncContactsWithDb(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        List<Contact> tempContactsList;
-
+        List<Contact> tempContactsList = new ArrayList<>();
+        List<Contact> appContactsList = new ArrayList<>();
         HashMap<String, String> phoneTable = new HashMap<>();
 
-        tempContactsList = new ArrayList<>();
-
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
         Cursor cursor = mResolver.query(ContactsContract.Contacts.CONTENT_URI,
                 null,
@@ -170,6 +101,27 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             cursor.close();
         }
 
+        Cursor c = mResolver.query(ContactsContract.Data.CONTENT_URI,
+                null,
+                ContactsContract.Data.MIMETYPE + " =?",
+                new String[] {"vnd.android.cursor.item/com.example.wetalk.profile"},
+                null);
+
+        assert c != null;
+        if (c.getCount() > 0) {
+            while (c.moveToNext()) {
+                String id = c.getString(c.getColumnIndex(ContactsContract.Data.DATA7));
+                String phone = c.getString(c.getColumnIndex(ContactsContract.Data.DATA1));
+                String name = c.getString(c.getColumnIndex(ContactsContract.Data.DATA2));
+                String userId = c.getString(c.getColumnIndex(ContactsContract.Data.DATA4));
+                String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
+                String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
+
+                appContactsList.add(new Contact(userId,id,name,phone,status,image));
+            }
+        }
+        c.close();
+
         rootRef.child("Contacts").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot1) {
@@ -177,6 +129,18 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot2) {
                         if (dataSnapshot1.exists()) {
+
+                            for (int i = 0; i < appContactsList.size(); i++) {
+                                if (!dataSnapshot1.hasChild(generatePhoneNumber(appContactsList.get(i).getPhone())))
+                                    deleteContact(appContactsList.get(i));
+                            }
+
+                            try {
+                                Thread.sleep(2000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
                             for (int i = 0; i < tempContactsList.size(); i++) {
                                 if (dataSnapshot1.hasChild(generatePhoneNumber(tempContactsList.get(i).getPhone()))) {
                                     tempContactsList.get(i).setUserId(Objects.requireNonNull(dataSnapshot1.child(
@@ -191,11 +155,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                                 tempContactsList.get(i).setImage(Objects.requireNonNull(dataSnapshot2.child(
                                                         tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue()).toString());
                                                 if (checkIfContactExist(tempContactsList.get(i))) {
-                                                    contactsDB.addContact(tempContactsList.get(i));
                                                     addContact(tempContactsList.get(i));
                                                 }
-                                                else if (checkForUpdate(tempContactsList.get(i))){
-                                                    contactsDB.updateContact(tempContactsList.get(i));
+                                                else if (checkForUpdate(tempContactsList.get(i))) {
+                                                    updateContact(tempContactsList.get(i));
                                                 }
                                             }
                                         }
@@ -219,11 +182,77 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         });
     }
 
+    private boolean checkIfContactExist(Contact contact) {
+        Cursor cursor = mResolver.query(ContactsContract.Data.CONTENT_URI,
+                null,
+                ContactsContract.Data.CONTACT_ID + " =? AND " +
+                        ContactsContract.Data.MIMETYPE + " =?",
+                new String[] {contact.getRawId(), "vnd.android.cursor.item/com.example.wetalk.profile"},
+                null);
+
+        boolean check;
+
+        assert cursor != null;
+        check = cursor.getCount() == 0;
+        cursor.close();
+        return check;
+    }
+
     private boolean checkForUpdate(Contact contact) {
-        Contact contact1 = contactsDB.getContactByPhone(contact.getPhone());
-        return !contact.getRawId().equals(contact1.getRawId()) || !contact.getPhone().equals(contact1.getPhone()) ||
-                !contact.getImage().equals(contact1.getImage()) || !contact.getUserId().equals(contact1.getUserId()) ||
-                !contact.getStatus().equals(contact1.getStatus()) || !contact.getName().equals(contact1.getName());
+        Cursor cursor = mResolver.query(ContactsContract.Data.CONTENT_URI,
+                null,
+                ContactsContract.Data.DATA4 + " =? AND " +
+                        ContactsContract.Data.MIMETYPE + " =?",
+                new String[] {contact.getUserId(), "vnd.android.cursor.item/com.example.wetalk.profile"},
+                null);
+
+        if (contact == null)
+            return false;
+        else if (contact.getRawId() == null)
+            return false;
+
+        assert cursor != null;
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA7));
+                String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA1));
+                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA2));
+                String userId = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA4));
+                String image = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA5));
+                String status = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA6));
+
+                return (!contact.getRawId().equals(id)) || (!contact.getUserId().equals(userId)) ||
+                        (!contact.getImage().equals(image)) || (!contact.getName().equals(name)) ||
+                        (!contact.getPhone().equals(phone)) || (!contact.getStatus().equals(status));
+            }
+        }
+
+        cursor.close();
+        return false;
+    }
+
+    private void updateContact(Contact contact) {
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+        ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                .withSelection(ContactsContract.Data.MIMETYPE + " =? AND "
+                                        + ContactsContract.Data.DATA4 + " =?",
+                                        new String[] {"vnd.android.cursor.item/com.example.wetalk.profile", contact.getUserId()})
+                .withValue(ContactsContract.Data.DATA1, contact.getPhone())
+                .withValue(ContactsContract.Data.DATA2, contact.getName())
+                .withValue(ContactsContract.Data.DATA3, "הודעה אל "+ generatePhoneNumber(contact.getPhone()))
+                .withValue(ContactsContract.Data.DATA4, contact.getUserId())
+                .withValue(ContactsContract.Data.DATA5, contact.getImage())
+                .withValue(ContactsContract.Data.DATA6, contact.getStatus())
+                .withValue(ContactsContract.Data.DATA7, contact.getRawId()).build());
+
+        try {
+            mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+            mResolver.notifyChange(ContactsContract.Contacts.CONTENT_URI, null, false);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void deleteContact(Contact contact) {
@@ -260,6 +289,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
                 try {
                     mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+                    mResolver.notifyChange(ContactsContract.Contacts.CONTENT_URI, null, false);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -308,10 +338,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 .withValue(ContactsContract.Data.DATA1, contact.getPhone())
                 .withValue(ContactsContract.Data.DATA2, contact.getName())
                 .withValue(ContactsContract.Data.DATA3, "הודעה אל "+ generatePhoneNumber(contact.getPhone()))
+                .withValue(ContactsContract.Data.DATA4, contact.getUserId())
+                .withValue(ContactsContract.Data.DATA5, contact.getImage())
+                .withValue(ContactsContract.Data.DATA6, contact.getStatus())
+                .withValue(ContactsContract.Data.DATA7, contact.getRawId())
                 .withYieldAllowed(true).build());
 
         try {
             mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+            mResolver.notifyChange(ContactsContract.Contacts.CONTENT_URI, null, false);
         }
         catch (Exception e) {
             e.printStackTrace();

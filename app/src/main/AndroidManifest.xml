@@ -35,7 +35,7 @@
         <activity
             android:name=".ViewingActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="fullSensor">
             <intent-filter
                 android:scheme="content://com.example.wetalk.provider"
                 tools:ignore="AppLinkUrlError">
@@ -98,15 +98,6 @@
                 android:resource="@xml/authenticator" />
         </service>
 
-        <provider
-            android:name=".ContactsProvider"
-            android:authorities="com.example.wetalk.provider"
-            android:exported="false"
-            android:label="אנשי קשר"
-            android:readPermission="com.example.wetalk.READ_DATABASE"
-            android:syncable="true"
-            android:writePermission="com.example.wetalk.WRITE_DATABASE" />
-
         <service
             android:name=".SyncService"
             android:exported="true"
@@ -122,6 +113,7 @@
                 android:name="android.provider.CONTACTS_STRUCTURE"
                 android:resource="@xml/contacts" />
         </service>
+
     </application>
 
 </manifest>
