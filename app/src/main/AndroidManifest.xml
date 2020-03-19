@@ -33,7 +33,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".AuthenticatorActivity"></activity>
         <activity
-            android:name=".ViewingActivity"
+            android:name=".ChatActivity"
             android:exported="true"
             android:screenOrientation="fullSensor">
             <intent-filter

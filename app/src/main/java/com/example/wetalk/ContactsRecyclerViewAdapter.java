@@ -1,6 +1,7 @@
 package com.example.wetalk;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -28,7 +30,7 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
     private int choice;
 
     public ContactsRecyclerViewAdapter(Context mContext, List<Contact> mContactsList, int choice) {
-        this.mContext = mContext;
+        this.mContext = (AppCompatActivity) mContext;
         this.mContactsList = mContactsList;
         this.choice = choice;
     }
@@ -40,7 +42,6 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
         View v;
         v = LayoutInflater.from(mContext).inflate(R.layout.item_contact, parent, false);
         MyViewHolder viewHolder = new MyViewHolder(v);
-
 
         return viewHolder;
     }
@@ -64,7 +65,12 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
             holder.tv_unreadMessages.setText(mContactsList.get(position).getUnreadMessages());
         }
 
-        holder.itemView.setOnClickListener(v -> {});
+        holder.itemView.setOnClickListener(v -> {
+            });
+    }
+
+    private void sendUserToChatActivity(int position) {
+
     }
 
     private void loadImage(@NonNull MyViewHolder holder, int position) {

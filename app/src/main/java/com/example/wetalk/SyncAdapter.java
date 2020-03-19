@@ -58,8 +58,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-
-
     private void syncContactsWithDb(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         List<Contact> tempContactsList = new ArrayList<>();
         List<Contact> appContactsList = new ArrayList<>();

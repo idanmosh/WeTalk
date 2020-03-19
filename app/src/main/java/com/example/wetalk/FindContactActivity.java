@@ -60,7 +60,6 @@ public class FindContactActivity extends AppCompatActivity {
         assert c != null;
         List<Contact> contactsList = new ArrayList<>();
 
-
         if (c.getCount() > 0) {
            while (c.moveToNext()) {
                String id = c.getString(c.getColumnIndex(ContactsContract.Data.DATA7));
@@ -73,8 +72,6 @@ public class FindContactActivity extends AppCompatActivity {
                contactsList.add(new Contact(userId,id,name,phone,status,image));
            }
         }
-
-
 
         c.close();
 

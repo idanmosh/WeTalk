@@ -1,6 +1,8 @@
 package com.example.wetalk.Classes;
 
-public class Contact {
+import java.io.Serializable;
+
+public class Contact implements Serializable {
     private String userId;
     private String rawId;
     private String name;
