@@ -19,34 +19,60 @@ public final class Permissions  {
     public static final int PROFILE_REQUEST_CODE = 100;
     public static final int IMAGE_REQUEST = 101;
     public static final int EXTERNAL_REQUEST = 102;
+    public static final int CALL_REQUEST = 103;
+
 
     public static final String READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
     public static final String WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
     public static final String READ_CONTACTS = Manifest.permission.READ_CONTACTS;
     public static final String WRITE_CONTACTS = Manifest.permission.WRITE_CONTACTS;
     public static final String GET_ACCOUNTS = Manifest.permission.GET_ACCOUNTS;
+    public static final String INTERNET = Manifest.permission.INTERNET;
+    public static final String ACCESS_NETWORK_STATE = Manifest.permission.ACCESS_NETWORK_STATE;
+    public static final String RECORD_AUDIO = Manifest.permission.RECORD_AUDIO;
+    public static final String MODIFY_AUDIO_SETTINGS = Manifest.permission.MODIFY_AUDIO_SETTINGS;
+    public static final String READ_PHONE_STATE = Manifest.permission.READ_PHONE_STATE;
+    public static final String CALL_PHONE = Manifest.permission.CALL_PHONE;
     public static final String CAMERA = Manifest.permission.CAMERA;
+    public static String[]  PermissionsCall = {INTERNET,ACCESS_NETWORK_STATE,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,READ_PHONE_STATE,CALL_PHONE};
+    public static boolean boolCallPermission = false;
 
     private Permissions() { }
 
     public static void ProfilePermissionsDialog(@NonNull Context context, @NonNull AppCompatActivity activity) {
         if (checkPermissions(context, READ_STORAGE, READ_CONTACTS)) {
-                MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
-                        .setDescription("To add contacts to chat," +
-                                " and recover your user information, allow WeTalk to" +
-                                " access your contacts, photos, media, and files from your device.")
-                        .setIcon(R.drawable.storage_contacts_permission)
-                        .setPositiveText(R.string.continue_btn)
-                        .onPositive((dialog1, which) -> requestPermissions(activity,
-                                new String[]{READ_STORAGE,WRITE_STORAGE,WRITE_CONTACTS,READ_CONTACTS,GET_ACCOUNTS}, PROFILE_REQUEST_CODE))
-                        .setNegativeText(R.string.decline)
-                        .onNegative((dialog12, which) -> {
-                            Toast.makeText(context, "You can't get access to contacts, photos," +
-                                    " media, and files from your device.", Toast.LENGTH_SHORT).show();
-                        })
-                        .setCancelable(false);
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To add contacts to chat," +
+                            " and recover your user information, allow WeTalk to" +
+                            " access your contacts, photos, media, and files from your device.")
+                    .setIcon(R.drawable.storage_contacts_permission)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(activity,
+                            new String[]{READ_STORAGE,WRITE_STORAGE,WRITE_CONTACTS,READ_CONTACTS,GET_ACCOUNTS}, PROFILE_REQUEST_CODE))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access to contacts, photos," +
+                                " media, and files from your device.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+            dialog.show();
+        }
+    }
 
-                dialog.show();
+    public static void callPermissionsDialog(@NonNull Context context, @NonNull AppCompatActivity activity) {
+        if (!checkPermissionsForCall(context, PermissionsCall)) {
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To call to contacts, allow WeTalk to create and received call from your device.")
+                    .setIcon(R.drawable.ic_phone_white)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(activity, PermissionsCall , CALL_REQUEST))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access to create and received call from contacts from your device.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+
+            dialog.show();
         }
     }
 
@@ -117,6 +143,16 @@ public final class Permissions  {
                 && (context.checkSelfPermission(permission1)
                 + context.checkSelfPermission(permission2))
                 != PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static boolean checkPermissionsForCall(@NonNull Context context, @NonNull String[] permissions) {
+        for (int i = 0; i<permissions.length; i++){
+            boolCallPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && (context.checkSelfPermission(permissions[i])) == PackageManager.PERMISSION_GRANTED;
+            if(!boolCallPermission)
+                return boolCallPermission;
+        }
+        return true;
     }
 
     public static void requestPermission(AppCompatActivity activity, @NonNull String permission, int requestCode) {

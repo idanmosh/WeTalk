@@ -9,12 +9,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.transition.Fade;
 import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.wetalk.Calling.CallListenerActivity;
 import com.example.wetalk.Login.HelloActivity;
 import com.example.wetalk.Login.LoginActivity;
 import com.example.wetalk.Login.ProfileActivity;
+import com.example.wetalk.Permissions.Permissions;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -116,7 +120,9 @@ public class TransitionActivity extends AppCompatActivity {
     }
 
     private void sendUserToMainActivity() {
+
         new Handler().postDelayed(() -> {
+            SinceClientStart();
             Intent mainIntent = new Intent(TransitionActivity.this, MainActivity.class);
             mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(mainIntent);
@@ -139,5 +145,32 @@ public class TransitionActivity extends AppCompatActivity {
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
+    }
+
+    private void SinceClientStart(){
+        if (Permissions.checkPermissionsForCall(getApplicationContext(), Permissions.PermissionsCall)){
+
+            Intent intent = new Intent(TransitionActivity.this, CallListenerActivity.class);
+            intent.putExtra("currentUser",currentUser.getUid());
+            startActivity(intent);
+            finish();
+        }
+        else
+            Permissions.callPermissionsDialog(getApplicationContext(),TransitionActivity.this);
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode==Permissions.CALL_REQUEST){
+            if (Permissions.checkPermissionsForCall(getApplicationContext(),Permissions.PermissionsCall)){
+                SinceClientStart();
+            }
+            else
+                Toast.makeText(this, "Permissions Rejected", Toast.LENGTH_SHORT).show();
+
+        }
     }
 }

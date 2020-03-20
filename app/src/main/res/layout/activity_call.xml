@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Calling.CallActivity"
+    android:background="@drawable/call_background"
+    android:id="@+id/call_activity_view">
+
+
+
+    <LinearLayout
+        android:id="@+id/linearLayoutContact"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible"
+        >
+
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_image_caller"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/profile_image"
+            android:layout_marginTop="60dp"/>
+
+        <TextView
+            android:id="@+id/name_calling_caontact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textAlignment="center"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="5dp"
+            android:textColor="@color/textColor"
+            android:text=""/>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/callState"
+            android:textSize="20sp"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="10dp"/>
+
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="center"
+            android:orientation="horizontal"
+            >
+
+            <ImageView
+                android:id="@+id/btnMute"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/mute"
+                android:layout_marginLeft="70dp"
+
+                />
+
+            <ImageView
+                android:id="@+id/btnSpeaker"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/speaker"
+                />
+
+
+
+            <ImageView
+                android:id="@+id/btnRejectCall"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/callingended"
+                />
+
+            <ImageView
+                android:id="@+id/btnAcceptCall"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/callingaccept"
+                android:layout_marginRight="70dp"
+                />
+
+        </LinearLayout>
+
+
+        <ImageView
+            android:id="@+id/btnHangUp"
+            android:layout_width="wrap_content"
+            android:layout_height="80dp"
+            android:src="@drawable/endcallafter"
+            android:layout_gravity="center"
+            android:layout_marginTop="30dp"
+            />
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

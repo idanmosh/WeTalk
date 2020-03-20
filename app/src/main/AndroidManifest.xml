@@ -21,6 +21,10 @@
     <uses-permission android:name="android.permission.READ_SYNC_STATS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
 
 
     <application
@@ -32,6 +36,9 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".AuthenticatorActivity"></activity>
+        <activity android:name=".Calling.CallListenerActivity"></activity>
+        <activity android:name=".Calling.CallActivity"/>
+        <activity android:name=".Calling.CallingActivity"/>
         <activity
             android:name=".ChatActivity"
             android:exported="true"

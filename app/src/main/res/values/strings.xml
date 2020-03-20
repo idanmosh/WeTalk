@@ -79,4 +79,10 @@
     <string name="one_account_allowed">one account allowed</string>
     <string name="default_notification_channel_id">1</string>
     <string name="fcm_message">sync contacts</string>
+    <string name="showcontact">Show Contact</string>
+    <string name="find">Find</string>
+    <string name="create_call">create_call</string>
+    <string name="create_video_call">create_video_call</string>
+    <string name="delete_all_message">Delete All Message</string>
+    <string name="block_contact">Block Contact</string>
 </resources>

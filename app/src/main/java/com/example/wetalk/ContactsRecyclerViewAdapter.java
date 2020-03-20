@@ -67,11 +67,11 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
 
         holder.itemView.setOnClickListener(v -> {
             Intent chatIntent = new Intent(mContext, ChatActivity.class);
-            chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            //chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             chatIntent.putExtra("CONTACT", mContactsList.get(position));
-            mContext.startActivity(chatIntent);
+            mContext.startActivity(chatIntent);/*
             ((AppCompatActivity) mContext).overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
-            ((AppCompatActivity) mContext).finish();});
+            ((AppCompatActivity) mContext).finish();*/});
     }
 
     private void sendUserToChatActivity(int position) {

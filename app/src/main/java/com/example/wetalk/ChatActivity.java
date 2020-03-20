@@ -1,26 +1,95 @@
 package com.example.wetalk;
 
+import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.QuickContactBadge;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+import com.example.wetalk.Calling.CallListenerActivity;
 import com.example.wetalk.Classes.Contact;
+
+import java.util.Objects;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
 
     private Contact mContact;
+    private Toolbar mToolbar;
+    private TextView mUserName, mUserStatus;
+    private CircleImageView mUserProfileImage;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        mUserProfileImage = findViewById(R.id.contactImage);
+        mUserName = findViewById(R.id.contactNameText);
 
         initContactData();
 
+        mUserName.setText(mContact.getName());
+        loadImage();
 
+        mToolbar = findViewById(R.id.toolbarContact);
+
+        setSupportActionBar(mToolbar);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        mToolbar.setNavigationOnClickListener(v -> {
+            finish();
+        });
+
+
+
+
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.contact_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.call_contact:
+                sendToCreateCallToContact();
+                return true;
+            case R.id.video_contact:
+               // deleteUserData();
+                return true;
+            case R.id.show_contact:
+                //
+                return true;
+            case R.id.find:
+               // sendUserToFindFriendsActivity();
+            default:
+                return super.onContextItemSelected(item);
+        }
     }
 
     private void initContactData() {
@@ -44,5 +113,29 @@ public class ChatActivity extends AppCompatActivity {
         else
             mContact = (Contact) getIntent().getSerializableExtra("CONTACT");
 
+    }
+
+    private void loadImage() {
+        if (mContact.getImage() != null) {
+            Glide.with(getApplicationContext()).asBitmap().load(mContact.getImage()).into(new CustomTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                    mUserProfileImage.setImageBitmap(resource);
+                }
+
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {
+                    Glide.with(getApplicationContext()).load(placeholder).into(mUserProfileImage);
+                }
+            });
+        }
+    }
+
+
+    private void sendToCreateCallToContact(){
+        Intent outCallIntent = new Intent(ChatActivity.this,CallListenerActivity.class);
+        outCallIntent.putExtra("outCall",mContact.getUserId());
+        startActivity(outCallIntent);
+        finish();;
     }
 }
