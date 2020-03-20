@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.wetalk.Calling.CallActivity;
 import com.example.wetalk.Calling.CallListenerActivity;
 import com.example.wetalk.Login.HelloActivity;
 import com.example.wetalk.Login.LoginActivity;
@@ -24,6 +25,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.sinch.android.rtc.calling.CallListener;
 
 public class TransitionActivity extends AppCompatActivity {
 
@@ -51,7 +53,6 @@ public class TransitionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_transition);
 
         fadeActivity();
-
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         AccountManager accountManager = (AccountManager) getSystemService(Context.ACCOUNT_SERVICE);
         assert accountManager != null;
@@ -66,6 +67,7 @@ public class TransitionActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
+
     }
 
     private void getSharedPreferences() {
@@ -82,8 +84,10 @@ public class TransitionActivity extends AppCompatActivity {
             sendUserToLoginActivity();
         else if (mProfileState)
             sendUserToProfileActivity();
-        else if(mMainState)
+        else if(mMainState) {
+            SinceClientStart();
             sendUserToMainActivity();
+        }
         else
             sendUserToHelloActivity();
     }
@@ -122,7 +126,6 @@ public class TransitionActivity extends AppCompatActivity {
     private void sendUserToMainActivity() {
 
         new Handler().postDelayed(() -> {
-            SinceClientStart();
             Intent mainIntent = new Intent(TransitionActivity.this, MainActivity.class);
             mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(mainIntent);
@@ -148,18 +151,19 @@ public class TransitionActivity extends AppCompatActivity {
     }
 
     private void SinceClientStart(){
-        if (Permissions.checkPermissionsForCall(getApplicationContext(), Permissions.PermissionsCall)){
+        //if (Permissions.checkPermissionsForCall(getApplicationContext(), Permissions.PermissionsCall)){
 
-            Intent intent = new Intent(TransitionActivity.this, CallListenerActivity.class);
+            Intent intent = new Intent(TransitionActivity.this, CallActivity.class);
             intent.putExtra("currentUser",currentUser.getUid());
             startActivity(intent);
             finish();
-        }
+
+       /* }
         else
             Permissions.callPermissionsDialog(getApplicationContext(),TransitionActivity.this);
-
+*/
     }
-
+/*
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -172,5 +176,5 @@ public class TransitionActivity extends AppCompatActivity {
                 Toast.makeText(this, "Permissions Rejected", Toast.LENGTH_SHORT).show();
 
         }
-    }
+    }*/
 }
