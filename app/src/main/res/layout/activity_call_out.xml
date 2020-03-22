@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Calling.CallActivity"
-    android:background="@drawable/call_background"
+    tools:context=".Calling.CallOutActivity"
     android:id="@+id/call_activity_view">
 
 
@@ -106,6 +105,5 @@
 
     </LinearLayout>
 
-
-
 </RelativeLayout>
+

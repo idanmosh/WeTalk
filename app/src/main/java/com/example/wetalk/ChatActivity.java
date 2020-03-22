@@ -10,9 +10,8 @@ import android.provider.ContactsContract;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.QuickContactBadge;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,12 +21,18 @@ import androidx.appcompat.widget.Toolbar;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.example.wetalk.Calling.CallListenerActivity;
+import com.example.wetalk.Calling.CallListenerSign;
+import com.example.wetalk.Calling.CallOutActivity;
+import com.example.wetalk.Calling.SinchCallListener;
 import com.example.wetalk.Classes.Contact;
+import com.sinch.android.rtc.SinchClientListener;
+import com.sinch.android.rtc.calling.Call;
 
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -133,9 +138,17 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void sendToCreateCallToContact(){
-        Intent outCallIntent = new Intent(ChatActivity.this,CallListenerActivity.class);
-        outCallIntent.putExtra("outCall",mContact.getUserId());
-        startActivity(outCallIntent);
-        finish();;
+        //CallListenerSign callListenerSign = new CallListenerSign();
+        if(CallListenerSign.sinchClient==null){
+            Toast.makeText(this, "Sinch Client not connected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        CallListenerSign.call = CallListenerSign.sinchClient.getCallClient().callUser(mContact.getUserId());
+        CallListenerSign.call.addCallListener(new SinchCallListener());
+        Intent callscreen = new Intent(this, CallOutActivity.class);
+        callscreen.putExtra("calling", mContact.getUserId());
+        callscreen.putExtra("incomming", false);
+        callscreen.addFlags(FLAG_ACTIVITY_NEW_TASK);
+        startActivity(callscreen);
     }
 }

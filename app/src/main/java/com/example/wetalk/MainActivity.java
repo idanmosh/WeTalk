@@ -21,6 +21,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.ViewPager;
 
+import com.example.wetalk.Calling.CallListenerSign;
+import com.example.wetalk.Calling.SinchOnIncomingCalllClientListener;
 import com.example.wetalk.Settings.SettingsActivity;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+/*
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 android.Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
@@ -94,8 +96,42 @@ public class MainActivity extends AppCompatActivity {
                     1);
         }
 
+*/
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                android.Manifest.permission.RECORD_AUDIO) !=
+                PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
+                (MainActivity.this, android.Manifest.permission.READ_PHONE_STATE)
+                != PackageManager.PERMISSION_GRANTED ) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{android.Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_PHONE_STATE},
+                    1);
+        }
 
 
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{android.Manifest.permission.INTERNET},
+                    1);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.MODIFY_AUDIO_SETTINGS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{android.Manifest.permission.MODIFY_AUDIO_SETTINGS},
+                    1);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{android.Manifest.permission.READ_PHONE_STATE},
+                    1);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{android.Manifest.permission.CALL_PHONE},
+                    1);
+        }
         initialize();
     }
 
@@ -110,6 +146,12 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
+        CallListenerSign callListenerSign = new CallListenerSign();
+        if(!callListenerSign.sinchClient.isStarted()) {
+            callListenerSign.sinchClient.start();
+            callListenerSign.sinchClient.getCallClient().addCallClientListener(new SinchOnIncomingCalllClientListener());
+
+        }
 
         userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);
 

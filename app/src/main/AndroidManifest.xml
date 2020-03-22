@@ -24,10 +24,10 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.CALL_PHONE"/>
-
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
+        android:name=".Classes.GlobalApplication"
         android:allowBackup="true"
         android:icon="@drawable/logo_image"
         android:label="@string/app_name"
@@ -35,10 +35,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".AuthenticatorActivity"></activity>
-        <activity android:name=".Calling.CallListenerActivity"></activity>
-        <activity android:name=".Calling.CallActivity"/>
-        <activity android:name=".Calling.CallingActivity"/>
+        <activity android:name=".Calling.CallOutActivity"></activity>
+        <activity android:name=".Calling.CallingActivity" />
+        <activity android:name=".AuthenticatorActivity" />
         <activity
             android:name=".ChatActivity"
             android:exported="true"
@@ -104,7 +103,6 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
-
         <service
             android:name=".SyncService"
             android:exported="true"
@@ -120,7 +118,6 @@
                 android:name="android.provider.CONTACTS_STRUCTURE"
                 android:resource="@xml/contacts" />
         </service>
-
     </application>
 
 </manifest>
