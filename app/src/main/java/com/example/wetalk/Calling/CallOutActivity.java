@@ -100,7 +100,7 @@ public class CallOutActivity extends AppCompatActivity implements View.OnClickLi
         contactUser = getIntent().getStringExtra("calling");
         if(contactUser==null){
             contactUser = getIntent().getStringExtra("incomingCall");
-            CallListenerSign.call = CallListenerSign.sinchClient.getCallClient().getCall(contactUser);
+            CallListenerSign.call = CallListenerSign.getSinchClient().getCallClient().getCall(contactUser);
         }
         acceptBtn = findViewById(R.id.btnAcceptCall);
         rejectBtn = findViewById(R.id.btnRejectCall);

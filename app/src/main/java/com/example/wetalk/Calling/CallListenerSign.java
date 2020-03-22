@@ -14,9 +14,32 @@ import com.sinch.android.rtc.calling.CallClient;
 public class CallListenerSign {
 
     public static Call call;
-    public static SinchClient sinchClient;
+    private static SinchClient sinchClient;
     public static CallClient callClient;
 
+    public static Call getCall() {
+        return call;
+    }
+
+    public static void setCall(Call call) {
+        CallListenerSign.call = call;
+    }
+
+    public static SinchClient getSinchClient() {
+        return sinchClient;
+    }
+
+    public static void setSinchClient(SinchClient sinchClient) {
+        CallListenerSign.sinchClient = sinchClient;
+    }
+
+    public static CallClient getCallClient() {
+        return callClient;
+    }
+
+    public static void setCallClient(CallClient callClient) {
+        CallListenerSign.callClient = callClient;
+    }
 
     Context context = GlobalApplication.getAppContext();
 

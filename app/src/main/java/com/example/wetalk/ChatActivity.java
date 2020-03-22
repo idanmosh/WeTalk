@@ -139,11 +139,11 @@ public class ChatActivity extends AppCompatActivity {
 
     private void sendToCreateCallToContact(){
         //CallListenerSign callListenerSign = new CallListenerSign();
-        if(CallListenerSign.sinchClient==null){
+        if(CallListenerSign.getSinchClient()==null){
             Toast.makeText(this, "Sinch Client not connected", Toast.LENGTH_SHORT).show();
             return;
         }
-        CallListenerSign.call = CallListenerSign.sinchClient.getCallClient().callUser(mContact.getUserId());
+        CallListenerSign.call = CallListenerSign.getSinchClient().getCallClient().callUser(mContact.getUserId());
         CallListenerSign.call.addCallListener(new SinchCallListener());
         Intent callscreen = new Intent(this, CallOutActivity.class);
         callscreen.putExtra("calling", mContact.getUserId());

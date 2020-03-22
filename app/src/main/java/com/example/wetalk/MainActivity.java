@@ -147,10 +147,9 @@ public class MainActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
         CallListenerSign callListenerSign = new CallListenerSign();
-        if(!callListenerSign.sinchClient.isStarted()) {
-            callListenerSign.sinchClient.start();
-            callListenerSign.sinchClient.getCallClient().addCallClientListener(new SinchOnIncomingCalllClientListener());
-
+        if(!CallListenerSign.getSinchClient().isStarted()) {
+            CallListenerSign.getSinchClient().start();
+            CallListenerSign.getSinchClient().getCallClient().addCallClientListener(new SinchOnIncomingCalllClientListener());
         }
 
         userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);

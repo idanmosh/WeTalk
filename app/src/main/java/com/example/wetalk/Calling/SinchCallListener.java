@@ -5,6 +5,8 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.wetalk.Classes.GlobalApplication;
 import com.sinch.android.rtc.PushPair;
 import com.sinch.android.rtc.calling.Call;
@@ -19,12 +21,12 @@ public class SinchCallListener implements CallListener {
     @Override
     public void onCallProgressing(Call call) {
         Toast.makeText(context, "onCallProgressing", Toast.LENGTH_SHORT).show();
-        ((Activity)context).setVolumeControlStream(AudioManager.STREAM_RING);
+        ((AppCompatActivity)context).setVolumeControlStream(AudioManager.STREAM_RING);
     }
 
     @Override
     public void onCallEstablished(Call call) {
-        ((Activity)context).setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+        ((AppCompatActivity)context).setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
         Toast.makeText(context, "call started", Toast.LENGTH_SHORT).show();
     }
 
@@ -36,7 +38,7 @@ public class SinchCallListener implements CallListener {
         audioManager.setSpeakerphoneOn(false);
         audioManager.setMicrophoneMute(false);
 
-        ((Activity)context).setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
+        ((AppCompatActivity)context).setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
     }
 
     @Override
