@@ -132,6 +132,8 @@ public class ChatActivity extends AppCompatActivity {
         //CallListenerSign callListenerSign = new CallListenerSign();
         if(Sinch.sinchClient==null){
             Toast.makeText(this, "Sinch Client not connected", Toast.LENGTH_SHORT).show();
+            Sinch sinchListnerActivity = new Sinch(this);
+            Toast.makeText(this, "Try again or restart the app", Toast.LENGTH_SHORT).show();
             return;
         }
 
