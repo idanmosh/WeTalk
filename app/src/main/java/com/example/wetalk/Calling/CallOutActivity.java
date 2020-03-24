@@ -154,7 +154,12 @@ public class CallOutActivity extends AppCompatActivity implements View.OnClickLi
             public void onTextChanged(CharSequence s, int start, int before, int count) { }
             @Override
             public void afterTextChanged(Editable s) {
-                finish();
+                if (s.toString().equals("final")){
+                    finish();
+                }
+                else if(s.toString().equals("start")){
+                    setDesplayAfterAnswer();
+                }
             }
         });
     }

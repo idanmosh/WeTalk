@@ -64,6 +64,8 @@ public class Sinch extends AppCompatActivity {
         @Override
         public void onCallEstablished(Call call) {
             Toast.makeText(context, "call started", Toast.LENGTH_SHORT).show();
+            CallOutActivity.state.setText("start");
+
         }
 
         @Override
