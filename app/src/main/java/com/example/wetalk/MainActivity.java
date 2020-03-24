@@ -58,44 +58,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-/*
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                android.Manifest.permission.RECORD_AUDIO) !=
-                PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
-                (MainActivity.this, android.Manifest.permission.READ_PHONE_STATE)
-                != PackageManager.PERMISSION_GRANTED ) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{android.Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_PHONE_STATE},
-                    1);
-        }
 
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{android.Manifest.permission.INTERNET},
-                    1);
-        }
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.MODIFY_AUDIO_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{android.Manifest.permission.MODIFY_AUDIO_SETTINGS},
-                    1);
-        }
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{android.Manifest.permission.READ_PHONE_STATE},
-                    1);
-        }
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{android.Manifest.permission.CALL_PHONE},
-                    1);
-        }
-
-*/
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 android.Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
