@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Calling.CallOutActivity"
-    android:id="@+id/call_activity_view">
+    android:id="@+id/call_activity_view"
+    android:background="@color/colorBack">
 
 
 
@@ -41,14 +42,11 @@
             android:text=""/>
 
         <TextView
-            android:layout_width="fill_parent"
+            android:id="@+id/state"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/callState"
-            android:textSize="20sp"
-            android:gravity="center_horizontal"
-            android:layout_marginBottom="10dp"/>
-
-
+            android:visibility="gone"
+            android:text=""/>
         <LinearLayout
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"

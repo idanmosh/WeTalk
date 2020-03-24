@@ -35,8 +35,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".Calling.CallOutActivity"></activity>
-        <activity android:name=".Calling.CallingActivity" />
+        <activity android:name=".Calling.CallOutActivity" />
         <activity android:name=".AuthenticatorActivity" />
         <activity
             android:name=".ChatActivity"

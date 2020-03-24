@@ -21,8 +21,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.ViewPager;
 
-import com.example.wetalk.Calling.CallListenerSign;
-import com.example.wetalk.Calling.SinchOnIncomingCalllClientListener;
+import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Settings.SettingsActivity;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -146,11 +145,14 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         rootRef = FirebaseDatabase.getInstance().getReference();
+
+        Sinch sinchListnerActivity = new Sinch(this);
+        /*
         CallListenerSign callListenerSign = new CallListenerSign();
         if(!CallListenerSign.getSinchClient().isStarted()) {
             CallListenerSign.getSinchClient().start();
             CallListenerSign.getSinchClient().getCallClient().addCallClientListener(new SinchOnIncomingCalllClientListener());
-        }
+        }*/
 
         userProfileImageRef = FirebaseStorage.getInstance().getReference().child(PROFILE_IMAGE);
 
@@ -272,6 +274,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-
 }

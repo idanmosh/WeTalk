@@ -12,27 +12,20 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.example.wetalk.Calling.CallListenerSign;
 import com.example.wetalk.Calling.CallOutActivity;
-import com.example.wetalk.Calling.SinchCallListener;
+import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Classes.Contact;
-import com.sinch.android.rtc.SinchClientListener;
-import com.sinch.android.rtc.calling.Call;
 
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -40,6 +33,7 @@ public class ChatActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private TextView mUserName, mUserStatus;
     private CircleImageView mUserProfileImage;
+    private MenuItem item;
 
 
     @Override
@@ -60,14 +54,11 @@ public class ChatActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        //item.setEnabled(CallListenerSign.sinchClient.isStarted());
 
         mToolbar.setNavigationOnClickListener(v -> {
             finish();
         });
-
-
-
-
 
     }
 
@@ -139,16 +130,25 @@ public class ChatActivity extends AppCompatActivity {
 
     private void sendToCreateCallToContact(){
         //CallListenerSign callListenerSign = new CallListenerSign();
-        if(CallListenerSign.getSinchClient()==null){
+        if(Sinch.sinchClient==null){
             Toast.makeText(this, "Sinch Client not connected", Toast.LENGTH_SHORT).show();
             return;
         }
-        CallListenerSign.call = CallListenerSign.getSinchClient().getCallClient().callUser(mContact.getUserId());
-        CallListenerSign.call.addCallListener(new SinchCallListener());
+
+        Sinch.call = Sinch.sinchClient.getCallClient().callUser(mContact.getUserId());
+        Sinch.call.addCallListener(new Sinch.SinchCallListener());
+
+
         Intent callscreen = new Intent(this, CallOutActivity.class);
         callscreen.putExtra("calling", mContact.getUserId());
+        callscreen.putExtra("callingName", mContact.getName());
+        callscreen.putExtra("callingImage", mContact.getImage());
         callscreen.putExtra("incomming", false);
-        callscreen.addFlags(FLAG_ACTIVITY_NEW_TASK);
+        callscreen.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(callscreen);
     }
+
+
 }
+
+
