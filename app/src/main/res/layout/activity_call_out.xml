@@ -5,103 +5,312 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Calling.CallOutActivity"
-    android:id="@+id/call_activity_view"
     android:background="@color/colorBack">
 
-
-
-    <LinearLayout
-        android:id="@+id/linearLayoutContact"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint_Layout_Video_Call"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="visible"
+        android:visibility="gone"
         >
 
+        <RelativeLayout
+            android:id="@+id/linearLayoutVideo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/call_activity_view"
+            android:layout_width="150dp"
+            android:layout_height="225dp"
+            android:layout_marginBottom="24dp"
+            android:orientation="vertical"
+            android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@+id/Btnpause"
+            app:layout_constraintEnd_toEndOf="parent">
+
+
+        </LinearLayout>
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/Btnpause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="20dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_videocam_off"
+            app:backgroundTint="#21FFFFFF"
+            app:elevation="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:rippleColor="@android:color/white" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnRejectCallVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="20dp"
+            android:layout_marginBottom="4dp"
+            android:backgroundTint="#FF0000"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_call_end_black_24dp"
+            app:elevation="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnMuteVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="20dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginBottom="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_mic_off"
+            app:backgroundTint="#22FFFFFF"
+            app:elevation="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint_Layout_CallAccept"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profile_image_caller"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_width="264dp"
+            android:layout_height="194dp"
+            android:layout_marginTop="64dp"
             android:scaleType="centerCrop"
             android:src="@drawable/profile_image"
-            android:layout_marginTop="60dp"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/name_calling_caontact"
-            android:layout_width="match_parent"
+            android:id="@+id/name_calling_contact"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
+            android:text=""
             android:textAlignment="center"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="5dp"
-            android:layout_marginStart="5dp"
             android:textColor="@color/textColor"
-            android:text=""/>
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profile_image_caller" />
 
         <TextView
             android:id="@+id/state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text=""
             android:visibility="gone"
-            android:text=""/>
-        <LinearLayout
-            android:id="@+id/linearLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/name_calling_contact" />
+
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/state"
+            android:textSize="30sp"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnSpeaker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_volume_up"
+            app:backgroundTint="#21FFFFFF"
+            app:elevation="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:rippleColor="@android:color/white" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnRejectCall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="20dp"
+            android:layout_marginBottom="4dp"
+            android:backgroundTint="#FF0000"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_call_end_black_24dp"
+            app:elevation="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnMute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="20dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginBottom="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_mic_off"
+            app:backgroundTint="#22FFFFFF"
+            app:elevation="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout_CallRing"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        >
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_image_wait_caller"
+            android:layout_width="342dp"
+            android:layout_height="295dp"
+            android:layout_marginTop="64dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/profile_image"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/name_calling_wait_caontact"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:textAlignment="center"
+            android:textColor="@color/textColor"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profile_image_wait_caller" />
+
+        <TextView
+            android:id="@+id/state_wait"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/name_calling_wait_caontact" />
+
+        <TextView
+            android:id="@+id/typeOfCall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Video Call"
+            android:visibility="gone"
+            android:textSize="28sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/name_calling_wait_caontact" />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:background="@color/colorBack"
             android:orientation="horizontal"
-            >
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/name_calling_wait_caontact">
 
-            <ImageView
-                android:id="@+id/btnMute"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/mute"
-                android:layout_marginLeft="70dp"
-
-                />
-
-            <ImageView
-                android:id="@+id/btnSpeaker"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/speaker"
-                />
-
-
-
-            <ImageView
-                android:id="@+id/btnRejectCall"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/callingended"
-                />
-
-            <ImageView
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/btnAcceptCall"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/callingaccept"
-                android:layout_marginRight="70dp"
-                />
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="fill"
+                android:layout_margin="20dp"
+                android:accessibilityHeading="false"
+                android:adjustViewBounds="false"
+                android:backgroundTint="#3C7A26"
+                android:clickable="true"
+                android:focusableInTouchMode="false"
+                android:nestedScrollingEnabled="false"
+                android:saveEnabled="false"
+                android:scaleType="center"
+                android:scrollbarAlwaysDrawHorizontalTrack="false"
+                android:scrollbarAlwaysDrawVerticalTrack="false"
+                android:src="@drawable/ic_call_100"
+                app:backgroundTint="#22FFFFFF"
+                app:fabCustomSize="90dp"
+                app:maxImageSize="80dp"
+                tools:layout_editor_absoluteX="254dp"
+                tools:layout_editor_absoluteY="655dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnRejectCall_wait"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="fill"
+                android:layout_margin="20dp"
+                android:accessibilityHeading="false"
+                android:adjustViewBounds="false"
+                android:backgroundTint="#FF0000"
+                android:clickable="true"
+                android:focusableInTouchMode="false"
+                android:nestedScrollingEnabled="false"
+                android:saveEnabled="false"
+                android:scaleType="center"
+                android:scrollbarAlwaysDrawHorizontalTrack="false"
+                android:scrollbarAlwaysDrawVerticalTrack="false"
+                android:src="@drawable/ic_call_end_black_24dp"
+                app:backgroundTint="#FF1493"
+                app:fabCustomSize="90dp"
+                app:maxImageSize="80dp"
+                tools:layout_editor_absoluteX="254dp"
+                tools:layout_editor_absoluteY="655dp" />
+
 
         </LinearLayout>
 
 
-        <ImageView
-            android:id="@+id/btnHangUp"
-            android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:src="@drawable/endcallafter"
-            android:layout_gravity="center"
-            android:layout_marginTop="30dp"
-            />
 
-    </LinearLayout>
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </RelativeLayout>
 

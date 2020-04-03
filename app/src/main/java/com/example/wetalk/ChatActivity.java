@@ -1,9 +1,11 @@
 package com.example.wetalk;
 
+import android.Manifest;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -23,17 +25,22 @@ import com.example.wetalk.Calling.CallOutActivity;
 import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Classes.Contact;
 
+
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 public class ChatActivity extends AppCompatActivity {
+    private static final int RC_SETTINGS = 1255;
 
     private Contact mContact;
     private Toolbar mToolbar;
     private TextView mUserName, mUserStatus;
     private CircleImageView mUserProfileImage;
     private MenuItem item;
+    private boolean permissionAccept=false;
 
 
     @Override
@@ -76,13 +83,13 @@ public class ChatActivity extends AppCompatActivity {
                 sendToCreateCallToContact();
                 return true;
             case R.id.video_contact:
-               // deleteUserData();
+                sendToCreateCallVidoeToContact();
                 return true;
             case R.id.show_contact:
                 //
                 return true;
             case R.id.find:
-               // sendUserToFindFriendsActivity();
+                // sendUserToFindFriendsActivity();
             default:
                 return super.onContextItemSelected(item);
         }
@@ -129,18 +136,36 @@ public class ChatActivity extends AppCompatActivity {
 
 
     private void sendToCreateCallToContact(){
-        //CallListenerSign callListenerSign = new CallListenerSign();
-        if(Sinch.sinchClient==null){
+        RequestPermissions();
+        if (permissionAccept) {
+            if (ifSinchClientNull()) return;
+            Sinch.call = Sinch.sinchClient.getCallClient().callUser(mContact.getUserId());
+            Sinch.call.addCallListener(new Sinch.SinchCallListener());
+            sendToCallingActivity();
+        }
+    }
+
+    private void sendToCreateCallVidoeToContact(){
+        RequestPermissions();
+        if (permissionAccept) {
+            if (ifSinchClientNull()) return;
+            Sinch.call = Sinch.sinchClient.getCallClient().callUserVideo(mContact.getUserId());
+            Sinch.call.addCallListener(new Sinch.SinchCallListener());
+            sendToCallingActivity();
+        }
+    }
+
+    private Boolean ifSinchClientNull(){
+        if (Sinch.sinchClient==null){
             Toast.makeText(this, "Sinch Client not connected", Toast.LENGTH_SHORT).show();
             Sinch sinchListnerActivity = new Sinch(this);
             Toast.makeText(this, "Try again or restart the app", Toast.LENGTH_SHORT).show();
-            return;
+            return true;
         }
+        return false;
+    }
 
-        Sinch.call = Sinch.sinchClient.getCallClient().callUser(mContact.getUserId());
-        Sinch.call.addCallListener(new Sinch.SinchCallListener());
-
-
+    private void sendToCallingActivity(){
         Intent callscreen = new Intent(this, CallOutActivity.class);
         callscreen.putExtra("calling", mContact.getUserId());
         callscreen.putExtra("callingName", mContact.getName());
@@ -150,6 +175,27 @@ public class ChatActivity extends AppCompatActivity {
         startActivity(callscreen);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode,permissions,grantResults,this);
+
+    }
+    @AfterPermissionGranted(RC_SETTINGS)
+    private void RequestPermissions() {
+
+        String[] perm = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.MODIFY_AUDIO_SETTINGS,
+                Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+        if (EasyPermissions.hasPermissions(this, perm)) {
+            permissionAccept = true;
+        }
+
+        else {
+            EasyPermissions.requestPermissions(this, "this app need to access your camera and mic", RC_SETTINGS, perm);
+            permissionAccept = false;
+        }
+    }
 
 }
 
