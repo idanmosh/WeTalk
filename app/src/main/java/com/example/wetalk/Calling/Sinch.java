@@ -1,15 +1,16 @@
 package com.example.wetalk.Calling;
+
+import android.Manifest;
 import android.app.Activity;
-import android.media.AudioManager;
 import android.content.Context;
 import android.content.Intent;
-import android.media.RingtoneManager;
+import android.media.AudioManager;
+import android.util.Log;
 import android.widget.Toast;
-import android.Manifest;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import pub.devrel.easypermissions.AfterPermissionGranted;
-import pub.devrel.easypermissions.EasyPermissions;
+
 import com.example.wetalk.Classes.GlobalApplication;
 import com.google.firebase.auth.FirebaseAuth;
 import com.sinch.android.rtc.PushPair;
@@ -20,6 +21,9 @@ import com.sinch.android.rtc.calling.CallClientListener;
 import com.sinch.android.rtc.video.VideoCallListener;
 
 import java.util.List;
+
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 
 public class Sinch extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
@@ -41,6 +45,7 @@ public class Sinch extends AppCompatActivity implements EasyPermissions.Permissi
     public Sinch(Context context) {
         con = context;
         USERID = FirebaseAuth.getInstance().getUid();
+
         sinchClient = com.sinch.android.rtc.Sinch.getSinchClientBuilder()
                 .context(context)
                 .userId(USERID)
@@ -80,8 +85,7 @@ public class Sinch extends AppCompatActivity implements EasyPermissions.Permissi
         }
     }
 
-
-    public static class SinchCallListener implements /*CallListener,*/VideoCallListener {
+    public static class SinchCallListener implements VideoCallListener {
         Context context = GlobalApplication.getAppContext();
 
         @Override
@@ -93,9 +97,6 @@ public class Sinch extends AppCompatActivity implements EasyPermissions.Permissi
         public void onCallEstablished(Call call) {
             Toast.makeText(context, "call started", Toast.LENGTH_SHORT).show();
             CallOutActivity.state.setText("start");
-
-
-
         }
 
         @Override
@@ -141,7 +142,6 @@ public class Sinch extends AppCompatActivity implements EasyPermissions.Permissi
 
     private class SinchCalllClientListener implements CallClientListener {
 
-
         private Context context;
 
         public SinchCalllClientListener(Context context) {
@@ -151,6 +151,7 @@ public class Sinch extends AppCompatActivity implements EasyPermissions.Permissi
         }
         @Override
         public void onIncomingCall(CallClient callClient, Call incomingCall) {
+            Log.d("Sinch.class", "onIncomingCall");
             RequestPermissions();
             if (isNoPermissions)
             {

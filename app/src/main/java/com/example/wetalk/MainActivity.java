@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.ViewPager;
 
+import com.example.wetalk.Adapters.TabsAccessorAdapter;
 import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Settings.SettingsActivity;
 import com.google.android.material.tabs.TabLayout;
@@ -58,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 android.Manifest.permission.RECORD_AUDIO) !=
@@ -136,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
         loadingBar = new ProgressDialog(this);
         mTabLayout = findViewById(R.id.main_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
-
     }
 
     @Override
@@ -171,6 +170,8 @@ public class MainActivity extends AppCompatActivity {
         loadingBar.setMessage(getString(R.string.PLEASE_WAIT_WHILE_WE_DELETE_YOUR_ACCOUNT));
         loadingBar.setCanceledOnTouchOutside(false);
         loadingBar.show();
+        rootRef.child(getString(R.string.CONTACTS)).child(Objects.requireNonNull(currentUser.getPhoneNumber()))
+                .removeValue().addOnCompleteListener(task -> {});
         rootRef.child(USERS).child(currentUser.getUid()).removeValue().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 StorageReference filePath = userProfileImageRef.child(currentUser.getUid() + getString(R.string.JPG));

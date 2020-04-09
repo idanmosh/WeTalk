@@ -23,6 +23,7 @@ import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.hbb20.CountryCodePicker;
 
 import java.util.HashMap;
@@ -195,23 +196,28 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        HashMap<String, Object> loginMap = new HashMap<>();
-                        loginMap.put(PHONE, phoneNumber);
                         String currentUserId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
-                        rootRef.child(USERS).child(currentUserId).updateChildren(loginMap)
-                                .addOnCompleteListener(task1 -> {
-                                    if (task1.isSuccessful()) {
-                                        Toast.makeText(LoginActivity.this, R.string.YOUR_LOGGED_IN_SUCCESS, Toast.LENGTH_SHORT).show();
-                                        loadingBar.dismiss();
-                                        mSharedPreferences.edit().putBoolean(Login_State, false).apply();
-                                        mVerificationInProgress = false;
-                                        rootRef.child(CONTACTS).child(phoneNumber).setValue(currentUserId);
-                                        sendUserToProfileActivity();
-                                    }
-                                    else {
-                                        String message = Objects.requireNonNull(task1.getException()).toString();
-                                        Toast.makeText(LoginActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
-                                    }
+                        FirebaseInstanceId.getInstance().getInstanceId()
+                                .addOnCompleteListener(task12 -> {
+                                    String token_id = Objects.requireNonNull(task12.getResult()).getToken();
+                                    HashMap<String, Object> loginMap = new HashMap<>();
+                                    loginMap.put(PHONE, phoneNumber);
+                                    loginMap.put("token_id", token_id);
+                                    rootRef.child(USERS).child(currentUserId).updateChildren(loginMap)
+                                            .addOnCompleteListener(task1 -> {
+                                                if (task1.isSuccessful()) {
+                                                    Toast.makeText(LoginActivity.this, R.string.YOUR_LOGGED_IN_SUCCESS, Toast.LENGTH_SHORT).show();
+                                                    loadingBar.dismiss();
+                                                    mSharedPreferences.edit().putBoolean(Login_State, false).apply();
+                                                    mVerificationInProgress = false;
+                                                    rootRef.child(CONTACTS).child(phoneNumber).setValue(currentUserId);
+                                                    sendUserToProfileActivity();
+                                                }
+                                                else {
+                                                    String message = Objects.requireNonNull(task1.getException()).toString();
+                                                    Toast.makeText(LoginActivity.this, getString(R.string.ERROR) + message, Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
                                 });
                     } else {
                         String message = Objects.requireNonNull(task.getException()).toString();

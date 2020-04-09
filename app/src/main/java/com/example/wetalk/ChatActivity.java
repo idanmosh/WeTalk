@@ -1,31 +1,53 @@
 package com.example.wetalk;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.wetalk.Adapters.MessageAdapter;
 import com.example.wetalk.Calling.CallOutActivity;
 import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Classes.Contact;
+import com.example.wetalk.Classes.Messages;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -34,21 +56,41 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class ChatActivity extends AppCompatActivity {
     private static final int RC_SETTINGS = 1255;
+    private static final String DATE_FORMAT = "h:mm a dd MMMM yyyy";
 
+    private FloatingActionButton btnSendMessage;
+    private EditText mMessage;
     private Contact mContact;
     private Toolbar mToolbar;
     private TextView mUserName, mUserStatus;
     private CircleImageView mUserProfileImage;
     private MenuItem item;
     private boolean permissionAccept=false;
-
+    private FirebaseAuth mAuth;
+    private DatabaseReference rootRef;
+    private final List<Messages> messageList = new ArrayList<>();
+    private final HashMap<String, Messages> messageMap = new HashMap<>();
+    private LinearLayoutManager linearLayoutManager;
+    private MessageAdapter messageAdapter;
+    private RecyclerView userMessagesList;
+    private String senderId;
+    private String senderMessageKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        mAuth = FirebaseAuth.getInstance();
+        rootRef = FirebaseDatabase.getInstance().getReference();
+        senderId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
+
         mUserProfileImage = findViewById(R.id.contactImage);
         mUserName = findViewById(R.id.contactNameText);
+        mMessage = findViewById(R.id.EditTextMessage);
+        btnSendMessage = findViewById(R.id.btnSendMessage);
+        mMessage.requestFocus();
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         initContactData();
 
@@ -67,6 +109,92 @@ public class ChatActivity extends AppCompatActivity {
             finish();
         });
 
+        btnSendMessage.setOnClickListener(v -> {
+            sendMessage();
+        });
+
+        messageAdapter = new MessageAdapter(messageList, getApplicationContext(), mContact);
+        userMessagesList = findViewById(R.id.messages);
+        linearLayoutManager = new LinearLayoutManager(this);
+        userMessagesList.setLayoutManager(linearLayoutManager);
+        userMessagesList.setAdapter(messageAdapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        rootRef.child(getString(R.string.USERS)).child(senderId).child("Messages")
+                .child(mContact.getUserId()).addChildEventListener(newMessageListener);
+    }
+
+    private ChildEventListener newMessageListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            Messages messages = dataSnapshot.getValue(Messages.class);
+            Objects.requireNonNull(messages).setMessageId(dataSnapshot.getKey());
+            messageMap.put(messages.getMessageId(), messages);
+            messageList.add(messages);
+            messageAdapter.notifyDataSetChanged();
+            userMessagesList.smoothScrollToPosition(Objects.requireNonNull(userMessagesList.getAdapter()).getItemCount());
+        }
+
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
+    private void sendMessage() {
+        String messageText = mMessage.getText().toString();
+
+        if ((!TextUtils.isEmpty(messageText)) && (messageText.charAt(0) != ' ') && (messageText.charAt(0) != '\n')) {
+            DatabaseReference senderMessageKeyRef = rootRef.child(getString(R.string.USERS))
+                    .child(senderId).child("Messages").child(mContact.getUserId()).push();
+            senderMessageKey = senderMessageKeyRef.getKey();
+            DatabaseReference receiverMessageKeyRef = rootRef.child(getString(R.string.USERS))
+                    .child(mContact.getUserId()).child("Messages").child(senderId).child(Objects.requireNonNull(senderMessageKey));
+            String date = getDate();
+
+            Map<String, Object> senderMessageTextBody = new HashMap<>();
+            senderMessageTextBody.put("message", messageText);
+            senderMessageTextBody.put("type", "text");
+            senderMessageTextBody.put("from", senderId);
+            senderMessageTextBody.put("date", date);
+
+            Map<String, Object> receiverMessageTextBody = new HashMap<>();
+            receiverMessageTextBody.put("message", messageText);
+            receiverMessageTextBody.put("type", "text");
+            receiverMessageTextBody.put("from", senderId);
+            receiverMessageTextBody.put("date", date);
+
+            senderMessageKeyRef.updateChildren(senderMessageTextBody).addOnCompleteListener(task -> {});
+            receiverMessageKeyRef.updateChildren(receiverMessageTextBody).addOnCompleteListener(task -> {});
+            mMessage.setText("");
+        }
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    private String getDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        Date today = Calendar.getInstance().getTime();
+        String date = sdf.format(today);
+        return date;
     }
 
     @Override
@@ -83,7 +211,7 @@ public class ChatActivity extends AppCompatActivity {
                 sendToCreateCallToContact();
                 return true;
             case R.id.video_contact:
-                sendToCreateCallVidoeToContact();
+                sendToCreateCallVideoToContact();
                 return true;
             case R.id.show_contact:
                 //
@@ -115,7 +243,6 @@ public class ChatActivity extends AppCompatActivity {
         }
         else
             mContact = (Contact) getIntent().getSerializableExtra("CONTACT");
-
     }
 
     private void loadImage() {
@@ -134,7 +261,6 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-
     private void sendToCreateCallToContact(){
         RequestPermissions();
         if (permissionAccept) {
@@ -145,7 +271,7 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    private void sendToCreateCallVidoeToContact(){
+    private void sendToCreateCallVideoToContact(){
         RequestPermissions();
         if (permissionAccept) {
             if (ifSinchClientNull()) return;
