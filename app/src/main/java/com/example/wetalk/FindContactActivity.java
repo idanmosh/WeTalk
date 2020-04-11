@@ -10,13 +10,19 @@ import android.telephony.TelephonyManager;
 import android.transition.Fade;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wetalk.Adapters.ContactsRecyclerViewAdapter;
 import com.example.wetalk.Classes.Contact;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -25,19 +31,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class FindContactActivity extends AppCompatActivity {
+public class FindContactActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>  {
 
     private Toolbar mToolBar;
     private RecyclerView contactsRecyclerView;
     private ContentResolver mResolver;
     private DatabaseReference rootRef;
+    private String mUserId;
+    private List<Contact> contactsList;
+    private ContactsRecyclerViewAdapter contactsRecyclerViewAdapter;
 
-
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_find_contacts);
 
+        mUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         rootRef = FirebaseDatabase.getInstance().getReference();
         mResolver = getContentResolver();
         fadeActivity();
@@ -53,30 +63,10 @@ public class FindContactActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         mToolBar.setNavigationOnClickListener(v -> sendUserToMainActivity());
 
-        Cursor c = mResolver.query(ContactsContract.Data.CONTENT_URI,
-                null,
-                ContactsContract.Data.MIMETYPE + " =?",
-                new String[] {"vnd.android.cursor.item/com.example.wetalk.profile"},
-                null);
-        assert c != null;
-        List<Contact> contactsList = new ArrayList<>();
+        getSupportLoaderManager().initLoader(0, null, this);
+        contactsList = new ArrayList<>();
 
-        if (c.getCount() > 0) {
-           while (c.moveToNext()) {
-               String id = c.getString(c.getColumnIndex(ContactsContract.Data.DATA7));
-               String phone = c.getString(c.getColumnIndex(ContactsContract.Data.DATA1));
-               String name = c.getString(c.getColumnIndex(ContactsContract.Data.DATA2));
-               String userId = c.getString(c.getColumnIndex(ContactsContract.Data.DATA4));
-               String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
-               String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
-
-               contactsList.add(new Contact(userId,id,name,phone,status,image));
-           }
-        }
-
-        c.close();
-
-        ContactsRecyclerViewAdapter contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
+        contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
                 FindContactActivity.this, contactsList,1);
         contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
     }
@@ -132,5 +122,42 @@ public class FindContactActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         sendUserToMainActivity();
+    }
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        return new CursorLoader(getApplicationContext(),
+                ContactsContract.Data.CONTENT_URI,
+                null,
+                ContactsContract.Data.MIMETYPE + " =?",
+                new String[] {"vnd.android.cursor.item/com.example.wetalk.profile"},
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor c) {
+        if (c.getCount() > 0) {
+            while (c.moveToNext()) {
+                String id = c.getString(c.getColumnIndex(ContactsContract.Data.DATA7));
+                String phone = c.getString(c.getColumnIndex(ContactsContract.Data.DATA1));
+                String name = c.getString(c.getColumnIndex(ContactsContract.Data.DATA2));
+                String userId = c.getString(c.getColumnIndex(ContactsContract.Data.DATA4));
+                String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
+                String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
+
+                //if (!mUserId.equals(userId))
+                contactsList.add(new Contact(userId,id,name,phone,status,image));
+            }
+        }
+
+        contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
+                FindContactActivity.this, contactsList,1);
+        contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        contactsList.clear();
     }
 }

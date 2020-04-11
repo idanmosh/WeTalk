@@ -150,8 +150,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                                 tempContactsList.get(i).setStatus(Objects.requireNonNull(dataSnapshot2.child(
                                                         tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.STATUS)).getValue()).toString());
 
-                                                tempContactsList.get(i).setImage(Objects.requireNonNull(dataSnapshot2.child(
-                                                        tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue()).toString());
+                                                tempContactsList.get(i).setImage(dataSnapshot2.child(
+                                                        tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue().toString());
                                                 if (checkIfContactExist(tempContactsList.get(i))) {
                                                     addContact(tempContactsList.get(i));
                                                 }

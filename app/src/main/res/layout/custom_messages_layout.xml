@@ -7,8 +7,8 @@
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/message_profile_image"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
         android:src="@drawable/profile_image" />
@@ -19,7 +19,9 @@
         android:layout_height="wrap_content"
         android:layout_toStartOf="@+id/message_profile_image"
         android:background="@drawable/receiver_messages_layout"
-        android:layout_margin="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
         android:layout_alignParentEnd="true">
 
         <LinearLayout
@@ -41,7 +43,7 @@
                 android:text="time"
                 android:textSize="11sp"
                 android:textColor="#808080"
-                android:layout_marginTop="2dp"
+                android:layout_margin="2dp"
                 android:textStyle="bold"
                 tools:ignore="SmallSp" />
         </LinearLayout>
@@ -51,26 +53,51 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="message"
-            android:padding="10dp"
-            android:textSize="14sp"
+            android:padding="5dp"
+            android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/receiver_message_text"
+    <LinearLayout
+        android:id="@+id/receiver_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:padding="10dp"
         android:layout_marginEnd="10dp"
-        android:layout_alignParentTop="@+id/sender_layout"
         android:layout_toEndOf="@+id/message_profile_image"
-        android:background="@drawable/sender_messages_layout"
-        android:text="message"
-        android:textSize="14sp"
-        android:textColor="@android:color/white"
-        android:textStyle="bold" />
+        android:layout_alignParentTop="@+id/sender_layout"
+        android:background="@drawable/sender_messages_layout">
+
+        <TextView
+            android:id="@+id/receiver_message_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="message"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end">
+
+            <TextView
+                android:id="@+id/receiver_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="time"
+                android:textSize="11sp"
+                android:paddingEnd="4dp"
+                android:textColor="@android:color/white"
+                android:layout_margin="2dp"
+                android:textStyle="bold"
+                tools:ignore="SmallSp" />
+        </LinearLayout>
+    </LinearLayout>
+
 
 </RelativeLayout>

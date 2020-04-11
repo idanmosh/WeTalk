@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -41,7 +42,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         this.userMessageList = userMessageList;
         this.mContext = mContext;
         this.receiverContact = receiverContact;
-
     }
 
     @NonNull
@@ -65,23 +65,27 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         if (receiverContact.getImage() != null)
             loadImage(holder);
 
-        if (messages.getType().equals("text")) {
+        if (messages.getType().equals(fromMessageType)) {
             holder.receiverProfileImage.setVisibility(View.INVISIBLE);
-            holder.receiverMessageTxt.setVisibility(View.INVISIBLE);
+            holder.receiverLayout.setVisibility(View.INVISIBLE);
             holder.senderLayout.setVisibility(View.INVISIBLE);
 
             if (messages.getFrom().equals(messageSenderId)) {
                 holder.senderLayout.setVisibility(View.VISIBLE);
                 holder.senderMessageTxt.setText(messages.getMessage());
-                holder.timeTxt.setText(messages.getMessageTime());
+                holder.senderTimeTxt.setText(messages.getMessageTime());
+                if (userMessageList.get(position).getState().equals("read"))
+                    holder.senderCheckRead.setImageResource(R.drawable.ic_done_all_gray);
             }
             else {
                 holder.receiverProfileImage.setVisibility(View.VISIBLE);
-                holder.receiverMessageTxt.setVisibility(View.VISIBLE);
+                holder.receiverLayout.setVisibility(View.VISIBLE);
                 holder.receiverMessageTxt.setText(messages.getMessage());
+                holder.receiverTimeTxt.setText(messages.getMessageTime());
             }
         }
     }
+
 
     private void loadImage(MessageViewHolder holder) {
         Glide.with(holder.receiverProfileImage.getContext()).asBitmap().load(receiverContact.getImage()).into(new CustomTarget<Bitmap>() {
@@ -102,16 +106,20 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
     public class MessageViewHolder extends ViewHolder {
 
-        private TextView senderMessageTxt, receiverMessageTxt, timeTxt;
+        private TextView senderMessageTxt, receiverMessageTxt, senderTimeTxt, receiverTimeTxt;
         private CircleImageView receiverProfileImage;
-        private LinearLayout senderLayout;
+        private ImageView senderCheckRead;
+        private LinearLayout senderLayout, receiverLayout;
 
         public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
+            senderCheckRead = itemView.findViewById(R.id.sender_check_image);
             senderLayout = itemView.findViewById(R.id.sender_layout);
+            receiverLayout = itemView.findViewById(R.id.receiver_layout);
             senderMessageTxt = itemView.findViewById(R.id.sender_message_text);
             receiverMessageTxt = itemView.findViewById(R.id.receiver_message_text);
-            timeTxt = itemView.findViewById(R.id.sender_time);
+            senderTimeTxt = itemView.findViewById(R.id.sender_time);
+            receiverTimeTxt = itemView.findViewById(R.id.receiver_time);
             receiverProfileImage = itemView.findViewById(R.id.message_profile_image);
         }
     }

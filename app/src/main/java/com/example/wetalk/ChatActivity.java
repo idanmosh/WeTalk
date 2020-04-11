@@ -33,6 +33,7 @@ import com.example.wetalk.Calling.CallOutActivity;
 import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Classes.Contact;
 import com.example.wetalk.Classes.Messages;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -40,6 +41,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,6 +78,7 @@ public class ChatActivity extends AppCompatActivity {
     private RecyclerView userMessagesList;
     private String senderId;
     private String senderMessageKey;
+    private boolean flag = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +117,15 @@ public class ChatActivity extends AppCompatActivity {
             sendMessage();
         });
 
+        rootRef.child(getString(R.string.USERS)).child(senderId).child("Messages")
+                .child(mContact.getUserId()).addChildEventListener(newMessageListener);
+
+        DatabaseReference unreadMessages = rootRef.child(getString(R.string.USERS))
+                .child(mContact.getUserId()).child("Messages")
+                .child(senderId);
+        Query query = unreadMessages.orderByChild("state").equalTo("unread");
+        query.addValueEventListener(readSenderMessagesListener);
+
         messageAdapter = new MessageAdapter(messageList, getApplicationContext(), mContact);
         userMessagesList = findViewById(R.id.messages);
         linearLayoutManager = new LinearLayoutManager(this);
@@ -121,27 +134,59 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        rootRef.child(getString(R.string.USERS)).child(senderId).child("Messages")
-                .child(mContact.getUserId()).addChildEventListener(newMessageListener);
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
+
+    private ValueEventListener readSenderMessagesListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                if (snapshot.exists() && snapshot.hasChild("state")) {
+                    String messageState = snapshot.child("state").getValue().toString();
+                    if (messageState.equals("unread")) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("state", "read");
+                        rootRef.child(getString(R.string.USERS))
+                                .child(mContact.getUserId())
+                                .child("Messages")
+                                .child(senderId)
+                                .child(snapshot.getKey().toString())
+                                .updateChildren(map).addOnCompleteListener(setStateMessageToReadListener);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+            databaseError.getMessage();
+        }
+    };
+
+    private OnCompleteListener setStateMessageToReadListener = task -> {};
 
     private ChildEventListener newMessageListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            Messages messages = dataSnapshot.getValue(Messages.class);
-            Objects.requireNonNull(messages).setMessageId(dataSnapshot.getKey());
-            messageMap.put(messages.getMessageId(), messages);
-            messageList.add(messages);
+            Messages message = dataSnapshot.getValue(Messages.class);
+            Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
+            messageMap.put(message.getMessageId(), message);
+            messageList.add(message);
             messageAdapter.notifyDataSetChanged();
             userMessagesList.smoothScrollToPosition(Objects.requireNonNull(userMessagesList.getAdapter()).getItemCount());
         }
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+            Messages message = dataSnapshot.getValue(Messages.class);
+            Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
+            messageList.remove(messageMap.get(message.getMessageId()));
+            messageList.add(message);
+            messageMap.remove(dataSnapshot.getKey());
+            messageMap.put(message.getMessageId(), message);
+            messageAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -176,6 +221,7 @@ public class ChatActivity extends AppCompatActivity {
             senderMessageTextBody.put("type", "text");
             senderMessageTextBody.put("from", senderId);
             senderMessageTextBody.put("date", date);
+            senderMessageTextBody.put("state", "unread");
 
             Map<String, Object> receiverMessageTextBody = new HashMap<>();
             receiverMessageTextBody.put("message", messageText);

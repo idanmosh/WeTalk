@@ -87,6 +87,6 @@
     <string name="block_contact">Block Contact</string>
     <string name="messageHint">הקלד הודעה</string>
     <string name="CONTACTS">Contacts</string>
-    <string name="channel_name">CHANNEL_NAME</string>
+    <string name="channel_name">התראות הודעה</string>
     <string name="channel_description">CHANNEL_DESC</string>
 </resources>

@@ -2,16 +2,22 @@ package com.example.wetalk.Classes;
 
 public class Messages {
 
-    private String date, from, message, type, messageId;
+    private String date;
+    private String from;
+    private String message;
+    private String type;
+    private String messageId;
+    private String state;
 
     public Messages() { }
 
-    public Messages(String date, String from, String message, String type, String messageId) {
+    public Messages(String date, String from, String message, String type, String messageId, String state) {
         this.message = message;
         this.type = type;
         this.from = from;
         this.date = date;
         this.messageId = messageId;
+        this.state = state;
     }
 
     public String getMessageTime() {
@@ -27,6 +33,14 @@ public class Messages {
         }
 
         return str[0] + ":" + str[1];
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 
     public String getMessage() {
