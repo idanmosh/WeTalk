@@ -63,6 +63,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         List<Contact> appContactsList = new ArrayList<>();
         HashMap<String, String> phoneTable = new HashMap<>();
 
+
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
         Cursor cursor = mResolver.query(ContactsContract.Contacts.CONTENT_URI,
@@ -133,11 +134,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                     deleteContact(appContactsList.get(i));
                             }
 
-                            try {
-                                Thread.sleep(2000);
+                            /*try {
+                                Thread.sleep(1000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
-                            }
+                            }*/
 
                             for (int i = 0; i < tempContactsList.size(); i++) {
                                 if (dataSnapshot1.hasChild(generatePhoneNumber(tempContactsList.get(i).getPhone()))) {
@@ -147,11 +148,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                     if (tempContactsList.get(i).getUserId() != null) {
                                         if (dataSnapshot2.exists()) {
                                             if (dataSnapshot2.hasChild(tempContactsList.get(i).getUserId())) {
+
                                                 tempContactsList.get(i).setStatus(Objects.requireNonNull(dataSnapshot2.child(
                                                         tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.STATUS)).getValue()).toString());
 
-                                                tempContactsList.get(i).setImage(dataSnapshot2.child(
-                                                        tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue().toString());
+                                                if (dataSnapshot2.child(tempContactsList.get(i).getUserId())
+                                                        .hasChild(mContext.getString(R.string.IMAGE))) {
+                                                    tempContactsList.get(i).setImage(dataSnapshot2.child(
+                                                            tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue().toString());
+                                                }
+
                                                 if (checkIfContactExist(tempContactsList.get(i))) {
                                                     addContact(tempContactsList.get(i));
                                                 }
@@ -219,9 +225,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 String image = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA5));
                 String status = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA6));
 
-                return (!contact.getRawId().equals(id)) || (!contact.getUserId().equals(userId)) ||
-                        (!contact.getImage().equals(image)) || (!contact.getName().equals(name)) ||
-                        (!contact.getPhone().equals(phone)) || (!contact.getStatus().equals(status));
+                return (!(contact.getRawId() == id)) || (!(contact.getUserId() == userId)) ||
+                        (!(contact.getImage() == image)) || (!(contact.getName() == name)) ||
+                        (!(contact.getPhone() == phone)) || (!(contact.getStatus() == status));
             }
         }
 
@@ -247,10 +253,19 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         try {
             mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
             mResolver.notifyChange(ContactsContract.Contacts.CONTENT_URI, null, false);
+
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private int getContactIndex(List<Contact> contactList, Contact contact) {
+        for (int i = 0; i < contactList.size(); i++) {
+            if (contactList.get(i).getUserId().equals(contact.getUserId()))
+                return i;
+        }
+        return -1;
     }
 
     private void deleteContact(Contact contact) {
@@ -294,6 +309,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 }
             }
         }
+
         cursor.close();
     }
 

@@ -3,6 +3,7 @@ package com.example.wetalk;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -32,7 +33,7 @@ import com.example.wetalk.Adapters.MessageAdapter;
 import com.example.wetalk.Calling.CallOutActivity;
 import com.example.wetalk.Calling.Sinch;
 import com.example.wetalk.Classes.Contact;
-import com.example.wetalk.Classes.Messages;
+import com.example.wetalk.Classes.Message;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,7 +44,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.sinch.gson.Gson;
+import com.sinch.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -61,6 +65,9 @@ public class ChatActivity extends AppCompatActivity {
     private static final int RC_SETTINGS = 1255;
     private static final String DATE_FORMAT = "h:mm a dd MMMM yyyy";
 
+    private static final String MyPREFERENCES = "ContactsPrefs";
+
+    private SharedPreferences mSharedPreferences;
     private FloatingActionButton btnSendMessage;
     private EditText mMessage;
     private Contact mContact;
@@ -71,14 +78,12 @@ public class ChatActivity extends AppCompatActivity {
     private boolean permissionAccept=false;
     private FirebaseAuth mAuth;
     private DatabaseReference rootRef;
-    private final List<Messages> messageList = new ArrayList<>();
-    private final HashMap<String, Messages> messageMap = new HashMap<>();
+    private List<Message> messageList = new ArrayList<>();
+    private HashMap<String, Message> messageMap = new HashMap<>();
     private LinearLayoutManager linearLayoutManager;
     private MessageAdapter messageAdapter;
     private RecyclerView userMessagesList;
     private String senderId;
-    private String senderMessageKey;
-    private boolean flag = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +94,7 @@ public class ChatActivity extends AppCompatActivity {
         rootRef = FirebaseDatabase.getInstance().getReference();
         senderId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
 
+        mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         mUserProfileImage = findViewById(R.id.contactImage);
         mUserName = findViewById(R.id.contactNameText);
         mMessage = findViewById(R.id.EditTextMessage);
@@ -109,13 +115,15 @@ public class ChatActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         //item.setEnabled(CallListenerSign.sinchClient.isStarted());
 
-        mToolbar.setNavigationOnClickListener(v -> {
-            finish();
-        });
+        mToolbar.setNavigationOnClickListener(v -> sendUserToMainActivity());
 
-        btnSendMessage.setOnClickListener(v -> {
-            sendMessage();
-        });
+        btnSendMessage.setOnClickListener(v -> sendMessage());
+
+        if (mSharedPreferences.contains(mContact.getUserId() + "_messageList") &&
+                mSharedPreferences.contains(mContact.getUserId() + "_messageMap")) {
+            getContactShredPreferences();
+            setRecyclerView();
+        }
 
         rootRef.child(getString(R.string.USERS)).child(senderId).child("Messages")
                 .child(mContact.getUserId()).addChildEventListener(newMessageListener);
@@ -126,6 +134,12 @@ public class ChatActivity extends AppCompatActivity {
         Query query = unreadMessages.orderByChild("state").equalTo("unread");
         query.addValueEventListener(readSenderMessagesListener);
 
+        if ((!mSharedPreferences.contains(mContact.getUserId() + "_messageList")) &&
+                (!mSharedPreferences.contains(mContact.getUserId() + "_messageMap")))
+            setRecyclerView();
+    }
+
+    private void setRecyclerView() {
         messageAdapter = new MessageAdapter(messageList, getApplicationContext(), mContact);
         userMessagesList = findViewById(R.id.messages);
         linearLayoutManager = new LinearLayoutManager(this);
@@ -136,6 +150,14 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        sendUserToMainActivity();
+    }
+
+    private void sendUserToMainActivity() {
+        Intent MainIntent = new Intent(ChatActivity.this, MainActivity.class);
+        MainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(MainIntent);
+        overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
         finish();
     }
 
@@ -165,27 +187,32 @@ public class ChatActivity extends AppCompatActivity {
         }
     };
 
-    private OnCompleteListener setStateMessageToReadListener = task -> {};
+    private OnCompleteListener setStateMessageToReadListener = task -> {setContactShredPreferences();};
 
     private ChildEventListener newMessageListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            Messages message = dataSnapshot.getValue(Messages.class);
+            Message message = dataSnapshot.getValue(Message.class);
             Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
-            messageMap.put(message.getMessageId(), message);
-            messageList.add(message);
+            setContactState();
+            if (!messageMap.containsKey(message.getMessageId())) {
+                messageMap.put(message.getMessageId(), message);
+                messageList.add(message);
+                setContactShredPreferences();
+            }
             messageAdapter.notifyDataSetChanged();
             userMessagesList.smoothScrollToPosition(Objects.requireNonNull(userMessagesList.getAdapter()).getItemCount());
         }
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-            Messages message = dataSnapshot.getValue(Messages.class);
+            Message message = dataSnapshot.getValue(Message.class);
             Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
             messageList.remove(messageMap.get(message.getMessageId()));
             messageList.add(message);
             messageMap.remove(dataSnapshot.getKey());
             messageMap.put(message.getMessageId(), message);
+            setContactShredPreferences();
             messageAdapter.notifyDataSetChanged();
         }
 
@@ -211,7 +238,7 @@ public class ChatActivity extends AppCompatActivity {
         if ((!TextUtils.isEmpty(messageText)) && (messageText.charAt(0) != ' ') && (messageText.charAt(0) != '\n')) {
             DatabaseReference senderMessageKeyRef = rootRef.child(getString(R.string.USERS))
                     .child(senderId).child("Messages").child(mContact.getUserId()).push();
-            senderMessageKey = senderMessageKeyRef.getKey();
+            String senderMessageKey = senderMessageKeyRef.getKey();
             DatabaseReference receiverMessageKeyRef = rootRef.child(getString(R.string.USERS))
                     .child(mContact.getUserId()).child("Messages").child(senderId).child(Objects.requireNonNull(senderMessageKey));
             String date = getDate();
@@ -233,6 +260,32 @@ public class ChatActivity extends AppCompatActivity {
             receiverMessageKeyRef.updateChildren(receiverMessageTextBody).addOnCompleteListener(task -> {});
             mMessage.setText("");
         }
+    }
+
+    private void setContactState() {
+        mSharedPreferences.edit().putBoolean(mContact.getUserId() + "_state", true).apply();
+    }
+
+    private void getContactShredPreferences() {
+        Gson gson = new Gson();
+        String jsonMessageList = mSharedPreferences.getString(mContact.getUserId() + "_messageList", "");
+        String jsonMessageMap = mSharedPreferences.getString(mContact.getUserId() + "_messageMap", "");
+
+        Type typeList = new TypeToken<List<Message>>() {}.getType();
+        Type typeMap = new TypeToken<HashMap<String, Message>>() {}.getType();
+        if ((!jsonMessageList.equals("")) && (!jsonMessageMap.equals(""))) {
+            messageList = gson.fromJson(jsonMessageList, typeList);
+            messageMap = gson.fromJson(jsonMessageMap, typeMap);
+        }
+    }
+
+    private void setContactShredPreferences() {
+        Gson gson = new Gson();
+        String jsonMessageList = gson.toJson(messageList);
+        String jsonMessageMap = gson.toJson(messageMap);
+
+        mSharedPreferences.edit().putString(mContact.getUserId() + "_messageList", jsonMessageList).apply();
+        mSharedPreferences.edit().putString(mContact.getUserId() + "_messageMap", jsonMessageMap).apply();
     }
 
     @SuppressLint("SimpleDateFormat")

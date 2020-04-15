@@ -25,12 +25,14 @@ public class TransitionActivity extends AppCompatActivity {
 
     private static int WELCOME_TIMEOUT = 1000;
     private static final String MyPREFERENCES = "MyPrefs";
+    private static final String ContactPREFERENCES = "ContactsPrefs";
     private static final String Login_State = "loginState";
     private static final String Profile_State = "profileState";
     private static final String Main_State = "mainState";
     private static final String IMAGE_KEY = "image_key";
 
 
+    private SharedPreferences mContactsSharedPreferences;
     private SharedPreferences mSharedPreferences;
 
     private FirebaseUser currentUser;
@@ -47,6 +49,7 @@ public class TransitionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_transition);
 
         fadeActivity();
+        mContactsSharedPreferences = getSharedPreferences(ContactPREFERENCES, MODE_PRIVATE);
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         AccountManager accountManager = (AccountManager) getSystemService(Context.ACCOUNT_SERVICE);
         assert accountManager != null;
@@ -54,6 +57,7 @@ public class TransitionActivity extends AppCompatActivity {
         if (account.length == 0) {
             mSharedPreferences.edit().putBoolean(Main_State, false).apply();
             mSharedPreferences.edit().putString(IMAGE_KEY, null).apply();
+            mContactsSharedPreferences.edit().clear().apply();
         }
         getSharedPreferences();
 
@@ -97,6 +101,7 @@ public class TransitionActivity extends AppCompatActivity {
 
     private void sendUserToHelloActivity() {
         mSharedPreferences.edit().clear().apply();
+        mContactsSharedPreferences.edit().clear().apply();
         new Handler().postDelayed(() -> {
             Intent helloIntent = new Intent(TransitionActivity.this, HelloActivity.class);
             helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -15,6 +15,8 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
 
@@ -25,6 +27,12 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.TaskStackBuilder;
 
 import com.example.wetalk.Classes.Contact;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -44,17 +52,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private Bitmap circleImage;
     private Contact mContact;
     private String messageBody;
+    private DatabaseReference ref;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
+        ref = FirebaseDatabase.getInstance().getReference();
         sender_id = remoteMessage.getData().getOrDefault("sender_id", "");
         messageTitle = "";
         image = "";
         mResolver = getApplicationContext().getContentResolver();
-        messageBody = Objects.requireNonNull(remoteMessage.getNotification()).getBody();
+        messageBody = remoteMessage.getData().getOrDefault("body", "");
 
         findSenderDetails();
 
@@ -97,6 +107,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void createSingleChatBuilder(PendingIntent resultPendingIntent) {
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         mBuilder = new NotificationCompat
                 .Builder(this, getString(R.string.default_notification_channel_id))
                 .setSmallIcon(R.drawable.logo_image)
@@ -105,11 +116,46 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
-                .setGroup(sender_id)
-                .setContentIntent(resultPendingIntent)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setOnlyAlertOnce(true);
+                .setGroup(mContact.getUserId())
+                .setGroupSummary(true)
+                .setSound(defaultSoundUri)
+                .setOnlyAlertOnce(false)
+                .setChannelId(getString(R.string.default_notification_channel_id))
+                .setContentIntent(resultPendingIntent);
+
+        DatabaseReference unreadMessages = ref.child(getString(R.string.USERS))
+                .child(mContact.getUserId()).child("Messages")
+                .child(sender_id);
+        Query query = unreadMessages.orderByChild("state").equalTo("read");
+        query.addValueEventListener(readSenderMessagesListener);
     }
+
+    private ValueEventListener readSenderMessagesListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
+            int count = 0;
+            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                if (snapshot.exists() && snapshot.hasChild("state")) {
+                    String messageState = snapshot.child("state").getValue().toString();
+                    if (messageState.equals("read")) {
+                        String message = snapshot.child("message").getValue().toString();
+                        style.addLine(message);
+                        count++;
+                    }
+                }
+            }
+            if (dataSnapshot.exists())
+                mBuilder.setStyle(style);
+            if (count > 1)
+                mBuilder.setContentText(count + " הודעות חדשות");
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+            databaseError.getMessage();
+        }
+    };
 
     private void createCircleImage() {
         circleImage = null;
@@ -121,7 +167,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         if (circleImage == null)
-            mBuilder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.drawable.profile_image));
+            mBuilder.setLargeIcon(getCircleBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.profile_image)));
         else{
             mBuilder.setLargeIcon(getCircleBitmap(circleImage));
         }
@@ -181,6 +227,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(getString(R.string.default_notification_channel_id), name, importance);
             channel.setDescription(description);
+            channel.enableVibration(true);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             assert notificationManager != null;
             notificationManager.createNotificationChannel(channel);

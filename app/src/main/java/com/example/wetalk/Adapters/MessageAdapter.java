@@ -18,7 +18,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.example.wetalk.Classes.Contact;
-import com.example.wetalk.Classes.Messages;
+import com.example.wetalk.Classes.Message;
 import com.example.wetalk.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
@@ -32,13 +32,13 @@ import static androidx.recyclerview.widget.RecyclerView.ViewHolder;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
 
-    private List<Messages> userMessageList;
+    private List<Message> userMessageList;
     private FirebaseAuth mAuth;
     private DatabaseReference usersRef;
     private Context mContext;
     private Contact receiverContact;
 
-    public MessageAdapter(List<Messages> userMessageList, Context mContext, Contact receiverContact) {
+    public MessageAdapter(List<Message> userMessageList, Context mContext, Contact receiverContact) {
         this.userMessageList = userMessageList;
         this.mContext = mContext;
         this.receiverContact = receiverContact;
@@ -58,30 +58,30 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         String messageSenderId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
-        Messages messages = userMessageList.get(position);
-        String fromUserId = messages.getFrom();
-        String fromMessageType = messages.getType();
+        Message message = userMessageList.get(position);
+        String fromUserId = message.getFrom();
+        String fromMessageType = message.getType();
 
         if (receiverContact.getImage() != null)
             loadImage(holder);
 
-        if (messages.getType().equals(fromMessageType)) {
+        if (message.getType().equals(fromMessageType)) {
             holder.receiverProfileImage.setVisibility(View.INVISIBLE);
             holder.receiverLayout.setVisibility(View.INVISIBLE);
             holder.senderLayout.setVisibility(View.INVISIBLE);
 
-            if (messages.getFrom().equals(messageSenderId)) {
+            if (message.getFrom().equals(messageSenderId)) {
                 holder.senderLayout.setVisibility(View.VISIBLE);
-                holder.senderMessageTxt.setText(messages.getMessage());
-                holder.senderTimeTxt.setText(messages.getMessageTime());
+                holder.senderMessageTxt.setText(message.getMessage());
+                holder.senderTimeTxt.setText(message.getMessageTime());
                 if (userMessageList.get(position).getState().equals("read"))
                     holder.senderCheckRead.setImageResource(R.drawable.ic_done_all_gray);
             }
             else {
                 holder.receiverProfileImage.setVisibility(View.VISIBLE);
                 holder.receiverLayout.setVisibility(View.VISIBLE);
-                holder.receiverMessageTxt.setText(messages.getMessage());
-                holder.receiverTimeTxt.setText(messages.getMessageTime());
+                holder.receiverMessageTxt.setText(message.getMessage());
+                holder.receiverTimeTxt.setText(message.getMessageTime());
             }
         }
     }

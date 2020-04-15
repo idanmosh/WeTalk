@@ -9,27 +9,25 @@ public class Contact implements Serializable {
     private String phone;
     private String image;
     private String status;
-    private String lastMessage;
-    private String lastMessageTime;
+    private Message lastMessage;
     private int unreadMessages;
 
     public Contact(Contact contact) {
         this.setPhone(contact.getPhone());
         this.setName(contact.getName());
-        this.setLastMessage(contact.getLastMessage());
         this.setImage(contact.getImage());
         this.setUnreadMessages(contact.getUnreadMessages());
-        this.setLastMessageTime(contact.getLastMessageTime());
         this.setStatus(contact.getStatus());
+        this.setRawId((contact.getRawId()));
+        this.setUserId(contact.getUserId());
+        this.setUnreadMessages(contact.getUnreadMessages());
     }
 
     public Contact() {
         this.setPhone(null);
-        this.setLastMessage(null);
         this.setName(null);
         this.setImage(null);
         this.setUnreadMessages(0);
-        this.setLastMessageTime(null);
         this.setStatus(null);
     }
 
@@ -45,10 +43,8 @@ public class Contact implements Serializable {
     public Contact(String name, String phone, String status) {
         this.setPhone(phone);
         this.setName(name);
-        this.setLastMessage(null);
         this.setImage(null);
         this.setUnreadMessages(0);
-        this.setLastMessageTime(null);
         this.setStatus(status);
     }
 
@@ -77,28 +73,12 @@ public class Contact implements Serializable {
         this.phone = phone;
     }
 
-    public String getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
-    }
-
     public int getUnreadMessages() {
         return unreadMessages;
     }
 
     public void setUnreadMessages(int unreadMessages) {
         this.unreadMessages = unreadMessages;
-    }
-
-    public String getLastMessageTime() {
-        return lastMessageTime;
-    }
-
-    public void setLastMessageTime(String lastMessageTime) {
-        this.lastMessageTime = lastMessageTime;
     }
 
     public String getStatus() {
@@ -123,5 +103,13 @@ public class Contact implements Serializable {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public Message getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(Message lastMessage) {
+        this.lastMessage = lastMessage;
     }
 }

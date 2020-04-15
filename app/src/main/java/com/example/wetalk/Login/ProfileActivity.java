@@ -1,12 +1,16 @@
 package com.example.wetalk.Login;
 
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.transition.Fade;
 import android.view.View;
 import android.widget.Button;
@@ -21,11 +25,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.example.wetalk.AccountGeneral;
 import com.example.wetalk.Classes.AppDir;
 import com.example.wetalk.Classes.User;
 import com.example.wetalk.MainActivity;
 import com.example.wetalk.Permissions.Permissions;
 import com.example.wetalk.R;
+import com.example.wetalk.SyncAdapter;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -42,6 +48,7 @@ import com.theartofdev.edmodo.cropper.CropImageView;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -76,6 +83,9 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+
+        AccountGeneral.createSyncAccount(this);
+        SyncAdapter.performSync();
 
         fadeActivity();
 
@@ -306,6 +316,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void sendUserToMainActivity() {
+        deleteAllContacts();
         mSharedPreferences.edit().putBoolean(Profile_State, false).apply();
         mSharedPreferences.edit().putBoolean(Main_State, true).apply();
         Intent mainIntent = new Intent(ProfileActivity.this, MainActivity.class);
@@ -313,6 +324,51 @@ public class ProfileActivity extends AppCompatActivity {
         startActivity(mainIntent);
         overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
         finish();
+    }
+
+    private void deleteAllContacts() {
+        if (!Permissions.checkPermissions(getApplicationContext(), Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS)) {
+            ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+
+            ContentResolver mResolver = getContentResolver();
+
+            Cursor cursor = mResolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                    null,
+                    ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND " +
+                            ContactsContract.RawContacts.ACCOUNT_NAME + " =?",
+                    new String[] {AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME},
+                    null);
+
+            assert cursor != null;
+            if (cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    Uri rawUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon().appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build();
+
+                    ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI).
+                            withSelection(ContactsContract.RawContacts._ID + " =? AND "
+                                            + ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
+                                            + ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
+                                    ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                            AccountGeneral.ACCOUNT_TYPE, AccountGeneral.ACCOUNT_NAME}).build()); //sets deleted flag to 1
+
+                    ops.add(ContentProviderOperation.newDelete(rawUri).
+                            withSelection(ContactsContract.RawContacts._ID + " =? AND "
+                                            +ContactsContract.RawContacts.ACCOUNT_TYPE + " =? AND "
+                                            +ContactsContract.RawContacts.ACCOUNT_NAME + " =?"
+                                    ,new String[] {cursor.getString(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                            AccountGeneral.ACCOUNT_TYPE,AccountGeneral.ACCOUNT_NAME}).build());
+
+                    try {
+                        mResolver.applyBatch(ContactsContract.AUTHORITY, ops);
+                        mResolver.notifyChange(ContactsContract.Contacts.CONTENT_URI, null, false);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            cursor.close();
+        }
     }
 
     private void fadeActivity() {

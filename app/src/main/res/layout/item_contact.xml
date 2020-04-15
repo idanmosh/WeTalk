@@ -15,12 +15,11 @@
         android:layout_height="56dp"
         android:src="@drawable/profile_image"/>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/first_layout"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:orientation="vertical"
         android:layout_toEndOf="@id/contact_img">
 
         <RelativeLayout
@@ -47,42 +46,59 @@
         </RelativeLayout>
 
         <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="14sp"
+            android:layout_marginStart="20dp"
+            android:maxLines="1"
+            android:text="@string/message"
+            android:textAlignment="textEnd"
+            android:textColor="#A9A9A9"
+            android:layout_marginTop="25dp"/>
+
+        <TextView
             android:id="@+id/last_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
             android:textSize="14sp"
+            android:maxLines="1"
+            android:layout_marginEnd="50dp"
             android:text="@string/message"
             android:textAlignment="textEnd"
             android:textColor="#A9A9A9"
-            android:layout_marginTop="5dp"/>
+            android:layout_marginTop="25dp"/>
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/first_layout"
-        android:orientation="vertical"
-        android:gravity="end">
-
-        <TextView
-            android:id="@+id/last_message_time"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/end_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/_10_00"/>
+            android:orientation="vertical"
+            android:gravity="end">
 
-        <TextView
-            android:id="@+id/circle_badge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/_0"
-            android:textAlignment="center"
-            android:textColor="#FFF"
-            android:textSize="12sp"
-            android:fontFamily="sans-serif-medium"
-            android:background="@drawable/badge_circle"
-            android:layout_marginTop="5dp"/>
+            <TextView
+                android:id="@+id/last_message_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/_10_00"/>
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/circle_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/_0"
+                android:textAlignment="center"
+                android:textColor="#FFF"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif-medium"
+                android:background="@drawable/badge_circle"
+                android:layout_marginTop="5dp"/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+
 </RelativeLayout>

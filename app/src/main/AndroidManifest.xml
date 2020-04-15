@@ -41,7 +41,7 @@
             android:name=".ChatActivity"
             android:exported="true"
             android:screenOrientation="fullSensor"
-            android:parentActivityName=".FindContactActivity"
+            android:parentActivityName=".MainActivity"
             android:excludeFromRecents="true">
             <intent-filter
                 android:scheme="content://com.example.wetalk.provider"

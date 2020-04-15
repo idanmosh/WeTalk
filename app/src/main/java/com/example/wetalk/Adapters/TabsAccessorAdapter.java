@@ -1,5 +1,7 @@
 package com.example.wetalk.Adapters;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,7 +21,7 @@ public class TabsAccessorAdapter extends FragmentPagerAdapter {
     private final List<Fragment> titlesList = new ArrayList<>();
 
     @SuppressWarnings("deprecation")
-    public TabsAccessorAdapter(@NonNull FragmentManager fm) {
+    public TabsAccessorAdapter(@NonNull FragmentManager fm, Context mContext) {
         super(fm);
     }
 

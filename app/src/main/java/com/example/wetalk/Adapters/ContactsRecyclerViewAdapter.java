@@ -1,7 +1,5 @@
 package com.example.wetalk.Adapters;
 
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -11,13 +9,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.example.wetalk.ChatActivity;
 import com.example.wetalk.Classes.Contact;
 import com.example.wetalk.R;
 
@@ -27,14 +23,14 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRecyclerViewAdapter.MyViewHolder> {
 
-    private Context mContext;
     private List<Contact> mContactsList;
     private int choice;
+    private final ListItemClickListener mOnClickListener;
 
-    public ContactsRecyclerViewAdapter(Context mContext, List<Contact> mContactsList, int choice) {
-        this.mContext = (AppCompatActivity) mContext;
+    public ContactsRecyclerViewAdapter(List<Contact> mContactsList, int choice, ListItemClickListener mOnClickListener) {
         this.mContactsList = mContactsList;
         this.choice = choice;
+        this.mOnClickListener = mOnClickListener;
     }
 
     @NonNull
@@ -42,7 +38,7 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         View v;
-        v = LayoutInflater.from(mContext).inflate(R.layout.item_contact, parent, false);
+        v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_contact, parent, false);
         MyViewHolder viewHolder = new MyViewHolder(v);
 
         return viewHolder;
@@ -50,31 +46,34 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
+        if (mContactsList.get(position).getImage() != null)
+            loadImage(holder, position);
+        holder.tv_unreadMessages.setVisibility(View.INVISIBLE);
+        holder.tv_status.setVisibility(View.INVISIBLE);
+        holder.tv_lastMessage.setVisibility(View.INVISIBLE);
+
+        holder.tv_name.setText(mContactsList.get(position).getName());
+
         if (choice == 1) {
-            if (mContactsList.get(position).getImage() != null)
-                loadImage(holder, position);
-            holder.tv_name.setText(mContactsList.get(position).getName());
-            holder.tv_lastMessage.setText(mContactsList.get(position).getStatus());
-            holder.tv__lastMessageTime.setVisibility(View.GONE);
-            holder.tv_unreadMessages.setVisibility(View.GONE);
+            holder.tv_status.setVisibility(View.VISIBLE);
+            holder.tv_status.setText(mContactsList.get(position).getStatus());
+            holder.tv__lastMessageTime.setVisibility(View.INVISIBLE);
         }
         else {
             holder.tv_name.setText(mContactsList.get(position).getName());
             holder.tv_phone.setText(mContactsList.get(position).getPhone());
-
-            holder.tv_lastMessage.setText(mContactsList.get(position).getLastMessage());
-            holder.tv__lastMessageTime.setText(mContactsList.get(position).getLastMessageTime());
-            holder.tv_unreadMessages.setText(mContactsList.get(position).getUnreadMessages());
+            holder.tv__lastMessageTime.setText(mContactsList.get(position).getLastMessage().getMessageTimeForContactView());
+            holder.tv_lastMessage.setVisibility(View.VISIBLE);
+            holder.tv_lastMessage.setText(mContactsList.get(position).getLastMessage().getMessage());
+            if (mContactsList.get(position).getUnreadMessages() > 0) {
+                holder.tv_unreadMessages.setText(String.valueOf(mContactsList.get(position).getUnreadMessages()));
+                holder.tv_unreadMessages.setVisibility(View.VISIBLE);
+            }
         }
 
         holder.itemView.setOnClickListener(v -> {
-            Intent chatIntent = new Intent(mContext, ChatActivity.class);
-            //chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            chatIntent.putExtra("CONTACT", mContactsList.get(position));
-            mContext.startActivity(chatIntent);
-            //((AppCompatActivity) mContext).overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
-            //((AppCompatActivity) mContext).finish();
-            });
+            mOnClickListener.onItemClick(position);
+        });
     }
 
     private void loadImage(@NonNull MyViewHolder holder, int position) {
@@ -102,10 +101,12 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
         private TextView tv_lastMessage;
         private TextView tv_unreadMessages;
         private TextView tv__lastMessageTime;
+        private TextView tv_status;
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
 
+            tv_status = itemView.findViewById(R.id.status);
             tv_name = itemView.findViewById(R.id.contact_name);
             tv_phone = itemView.findViewById(R.id.contact_phone);
             civ_image = itemView.findViewById(R.id.contact_img);
@@ -115,4 +116,7 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
         }
     }
 
+    public interface ListItemClickListener{
+        void onItemClick(int position);
+    }
 }

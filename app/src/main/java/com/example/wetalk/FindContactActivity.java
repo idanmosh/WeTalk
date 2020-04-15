@@ -1,12 +1,10 @@
 package com.example.wetalk;
 
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.telephony.TelephonyManager;
 import android.transition.Fade;
 import android.view.View;
 
@@ -22,23 +20,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wetalk.Adapters.ContactsRecyclerViewAdapter;
 import com.example.wetalk.Classes.Contact;
+import com.example.wetalk.Permissions.Permissions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class FindContactActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>  {
+public class FindContactActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, ContactsRecyclerViewAdapter.ListItemClickListener   {
 
     private Toolbar mToolBar;
     private RecyclerView contactsRecyclerView;
     private ContentResolver mResolver;
     private DatabaseReference rootRef;
     private String mUserId;
-    private List<Contact> contactsList;
+    private final List<Contact> contactsList = new ArrayList<>();
     private ContactsRecyclerViewAdapter contactsRecyclerViewAdapter;
 
     @SuppressWarnings("deprecation")
@@ -63,12 +61,20 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         mToolBar.setNavigationOnClickListener(v -> sendUserToMainActivity());
 
-        getSupportLoaderManager().initLoader(0, null, this);
-        contactsList = new ArrayList<>();
+        if (!Permissions.checkPermissions(getApplicationContext(), Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS))
+            getSupportLoaderManager().initLoader(0, null, this);
 
         contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
-                FindContactActivity.this, contactsList,1);
+                contactsList,1, this);
         contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!Permissions.checkPermissions(getApplicationContext(), Permissions.READ_CONTACTS, Permissions.WRITE_CONTACTS))
+            getSupportLoaderManager().initLoader(0, null, this);
     }
 
     private void fadeActivity() {
@@ -85,29 +91,6 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
 
         getWindow().setEnterTransition(fade);
         getWindow().setExitTransition(fade);
-    }
-
-    private String generatePhoneNumber(String number) {
-        StringBuilder phone = new StringBuilder();
-
-        if (number.length() > 9)
-            number = number.substring(1);
-
-        for (int i=0; i < number.length();i++) {
-            if (i == 0 && number.charAt(i) == '+')
-                phone.append(number.charAt(i));
-
-            if (number.charAt(i) >= '0' && number.charAt(i) <= '9')
-                phone.append(number.charAt(i));
-        }
-        TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        String SIMCountryISO = Objects.requireNonNull(tm).getSimCountryIso().toUpperCase();
-        String countryCode = "+" + PhoneNumberUtil.getInstance().getCountryCodeForRegion(SIMCountryISO);
-
-        if (!phone.toString().contains(countryCode))
-            phone.insert(0, countryCode);
-
-        return phone.toString();
     }
 
     private void sendUserToMainActivity() {
@@ -137,6 +120,7 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor c) {
+        contactsList.clear();
         if (c.getCount() > 0) {
             while (c.moveToNext()) {
                 String id = c.getString(c.getColumnIndex(ContactsContract.Data.DATA7));
@@ -152,12 +136,22 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
         }
 
         contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter(
-                FindContactActivity.this, contactsList,1);
+                contactsList,1, this);
         contactsRecyclerView.setAdapter(contactsRecyclerViewAdapter);
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         contactsList.clear();
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        Intent chatIntent = new Intent(getApplicationContext(), ChatActivity.class);
+        chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        chatIntent.putExtra("CONTACT", contactsList.get(position));
+        startActivity(chatIntent);
+        overridePendingTransition(R.anim.slide_up, R.anim.slide_up);
+        finish();
     }
 }

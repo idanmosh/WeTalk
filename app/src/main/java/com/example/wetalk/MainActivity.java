@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).setTitle(TITLE);
 
         mViewPager = findViewById(R.id.main_tabs_pager);
-        mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
+        mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager(), getApplicationContext());
         mViewPager.setAdapter(mTabsAccessorAdapter);
 
         loadingBar = new ProgressDialog(this);
