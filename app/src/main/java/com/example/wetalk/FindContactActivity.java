@@ -130,8 +130,8 @@ public class FindContactActivity extends AppCompatActivity implements LoaderMana
                 String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
                 String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
 
-                //if (!mUserId.equals(userId))
-                contactsList.add(new Contact(userId,id,name,phone,status,image));
+                if (!mUserId.equals(userId))
+                    contactsList.add(new Contact(userId,id,name,phone,status,image));
             }
         }
 

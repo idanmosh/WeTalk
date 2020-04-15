@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Objects;
+import java.util.Stack;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -97,6 +98,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private void createSingleChatIntent() {
         Intent chatIntent = new Intent(this, ChatActivity.class);
+        chatIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         chatIntent.putExtra("CONTACT", mContact);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addNextIntentWithParentStack(chatIntent);
@@ -116,6 +118,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
+                .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
                 .setGroup(mContact.getUserId())
                 .setGroupSummary(true)
                 .setSound(defaultSoundUri)
@@ -126,13 +129,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         DatabaseReference unreadMessages = ref.child(getString(R.string.USERS))
                 .child(mContact.getUserId()).child("Messages")
                 .child(sender_id);
-        Query query = unreadMessages.orderByChild("state").equalTo("read");
+        Query query = unreadMessages.orderByChild("state").equalTo("read").limitToFirst(1000);
+        query.keepSynced(true);
         query.addValueEventListener(readSenderMessagesListener);
     }
 
     private ValueEventListener readSenderMessagesListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            Stack<String> stack = new Stack<>();
+            Stack<String> sortStack = new Stack<>();
             NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
             int count = 0;
             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
@@ -140,15 +146,26 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     String messageState = snapshot.child("state").getValue().toString();
                     if (messageState.equals("read")) {
                         String message = snapshot.child("message").getValue().toString();
-                        style.addLine(message);
+                        stack.push(message);
                         count++;
                     }
                 }
             }
+            int counter = 0;
+            while ((!stack.isEmpty()) && (counter < 7)) {
+                sortStack.push(stack.pop());
+                counter++;
+            }
+            counter = 0;
+            while ((!sortStack.isEmpty()) && (counter < 7)) {
+                style.addLine(sortStack.pop());
+                counter++;
+            }
+            if (count > 1) {
+                mBuilder.setContentText(count + " הודעות חדשות");
+            }
             if (dataSnapshot.exists())
                 mBuilder.setStyle(style);
-            if (count > 1)
-                mBuilder.setContentText(count + " הודעות חדשות");
         }
 
         @Override

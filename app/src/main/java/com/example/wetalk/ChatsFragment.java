@@ -150,63 +150,65 @@ public class ChatsFragment extends Fragment implements LoaderManager.LoaderCallb
                 String userId = c.getString(c.getColumnIndex(ContactsContract.Data.DATA4));
                 String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
                 String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
-                //if (!mUserId.equals(userId))
-                Contact contact = new Contact(userId,id,name,phone,status,image);
 
-                if (mSharedPreferences.contains(userId + "_state") && mSharedPreferences.contains(userId + "_messageList")) {
-                    Gson gson = new Gson();
-                    Type typeList = new TypeToken<List<Message>>() {}.getType();
-                    String jsonMessageList = mSharedPreferences.getString(userId + "_messageList", "");
-                    List<Message> messageList = gson.fromJson(jsonMessageList, typeList);
-                    contact.setLastMessage(messageList.get(messageList.size()-1));
-                    contact.setUnreadMessages(getUnreadMessages(messageList));
+                if (!mAuth.getCurrentUser().getUid().equals(userId)) {
+                    Contact contact = new Contact(userId,id,name,phone,status,image);
 
-                    contactsMap.put(contact.getUserId(), contact);
-                }
+                    if (mSharedPreferences.contains(userId + "_state") && mSharedPreferences.contains(userId + "_messageList")) {
+                        Gson gson = new Gson();
+                        Type typeList = new TypeToken<List<Message>>() {}.getType();
+                        String jsonMessageList = mSharedPreferences.getString(userId + "_messageList", "");
+                        List<Message> messageList = gson.fromJson(jsonMessageList, typeList);
+                        contact.setLastMessage(messageList.get(messageList.size()-1));
+                        contact.setUnreadMessages(getUnreadMessages(messageList));
 
-                ref.child(getString(R.string.USERS))
-                        .child(contact.getUserId()).child("Messages")
-                        .child(mAuth.getCurrentUser().getUid()).addChildEventListener(new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        Message message = dataSnapshot.getValue(Message.class);
-                        Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
-                        setContactState(contact);
-                        if (!messageMap.containsKey(message.getMessageId())) {
-                            messageMap.put(message.getMessageId(), message);
-                            messageList.add(message);
-                            setContactShredPreferences(contact);
+                        contactsMap.put(contact.getUserId(), contact);
+                    }
+
+                    ref.child(getString(R.string.USERS))
+                            .child(contact.getUserId()).child("Messages")
+                            .child(mAuth.getCurrentUser().getUid()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                            Message message = dataSnapshot.getValue(Message.class);
+                            Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
+                            setContactState(contact);
+                            if (!messageMap.containsKey(message.getMessageId())) {
+                                messageMap.put(message.getMessageId(), message);
+                                messageList.add(message);
+                                setContactShredPreferences(contact);
+                            }
+                            contactsRecyclerViewAdapter.notifyDataSetChanged();
                         }
-                        contactsRecyclerViewAdapter.notifyDataSetChanged();
-                    }
 
-                    @Override
-                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        Message message = dataSnapshot.getValue(Message.class);
-                        Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
-                        messageList.remove(messageMap.get(message.getMessageId()));
-                        messageList.add(message);
-                        messageMap.remove(dataSnapshot.getKey());
-                        messageMap.put(message.getMessageId(), message);
-                        setContactShredPreferences(contact);
-                        contactsRecyclerViewAdapter.notifyDataSetChanged();
-                    }
+                        @Override
+                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                            Message message = dataSnapshot.getValue(Message.class);
+                            Objects.requireNonNull(message).setMessageId(dataSnapshot.getKey());
+                            messageList.remove(messageMap.get(message.getMessageId()));
+                            messageList.add(message);
+                            messageMap.remove(dataSnapshot.getKey());
+                            messageMap.put(message.getMessageId(), message);
+                            setContactShredPreferences(contact);
+                            contactsRecyclerViewAdapter.notifyDataSetChanged();
+                        }
 
-                    @Override
-                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                        @Override
+                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        @Override
+                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+                }
             }
         }
 
