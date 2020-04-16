@@ -159,12 +159,12 @@ public class ChatsFragment extends Fragment implements LoaderManager.LoaderCallb
                         Gson gson = new Gson();
                         Type typeList = new TypeToken<List<Message>>() {}.getType();
                         String jsonMessageList = mSharedPreferences.getString(userId + "_messageList", "");
-                        messageList = gson.fromJson(jsonMessageList, typeList);
+                        List<Message> messageList = gson.fromJson(jsonMessageList, typeList);
                         contact.setLastMessage(messageList.get(messageList.size()-1));
                         unreadMessages = mSharedPreferences.getInt(contact.getUserId() + "_unreadMessages", 0);
                         contact.setUnreadMessages(unreadMessages);
 
-
+                        contactsMap.put(contact.getUserId(), contact);
                     }
 
                     if (mSharedPreferences.contains(contact.getUserId() + "_unreadMessages")) {
@@ -215,10 +215,6 @@ public class ChatsFragment extends Fragment implements LoaderManager.LoaderCallb
 
                         }
                     });
-
-                    if (messageList.size() > 0)
-                        contact.setLastMessage(messageList.get(messageList.size()-1));
-                    contactsMap.put(contact.getUserId(), contact);
                 }
             }
         }
