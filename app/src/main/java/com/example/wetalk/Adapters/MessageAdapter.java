@@ -74,8 +74,10 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                 holder.senderLayout.setVisibility(View.VISIBLE);
                 holder.senderMessageTxt.setText(message.getMessage());
                 holder.senderTimeTxt.setText(message.getMessageTime());
-                if (userMessageList.get(position).getState().equals("read"))
-                    holder.senderCheckRead.setImageResource(R.drawable.ic_done_all_gray);
+                if (userMessageList.get(position).getState() != null) {
+                    if (userMessageList.get(position).getState().equals("read"))
+                        holder.senderCheckRead.setImageResource(R.drawable.ic_done_all_gray);
+                }
             }
             else {
                 holder.receiverProfileImage.setVisibility(View.VISIBLE);

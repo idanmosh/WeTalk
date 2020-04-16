@@ -125,6 +125,8 @@ public class ChatActivity extends AppCompatActivity {
             setRecyclerView();
         }
 
+        mSharedPreferences.edit().putInt(mContact.getUserId() + "_unreadMessages", 0).apply();
+
         rootRef.child(getString(R.string.USERS)).child(senderId).child("Messages")
                 .child(mContact.getUserId()).addChildEventListener(newMessageListener);
 
@@ -132,6 +134,7 @@ public class ChatActivity extends AppCompatActivity {
                 .child(mContact.getUserId()).child("Messages")
                 .child(senderId);
         Query query = unreadMessages.orderByChild("state").equalTo("unread");
+        query.keepSynced(true);
         query.addValueEventListener(readSenderMessagesListener);
 
         if ((!mSharedPreferences.contains(mContact.getUserId() + "_messageList")) &&
@@ -160,6 +163,33 @@ public class ChatActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_down, R.anim.slide_down);
         finish();
     }
+
+    private ChildEventListener setSenderMessagesUnread = new ChildEventListener() {
+        @Override
+        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+
+        @Override
+        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
 
     private ValueEventListener readSenderMessagesListener = new ValueEventListener() {
         @Override
@@ -406,6 +436,7 @@ public class ChatActivity extends AppCompatActivity {
         EasyPermissions.onRequestPermissionsResult(requestCode,permissions,grantResults,this);
 
     }
+
     @AfterPermissionGranted(RC_SETTINGS)
     private void RequestPermissions() {
 

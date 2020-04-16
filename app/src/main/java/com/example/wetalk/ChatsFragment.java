@@ -153,16 +153,23 @@ public class ChatsFragment extends Fragment implements LoaderManager.LoaderCallb
 
                 if (!mAuth.getCurrentUser().getUid().equals(userId)) {
                     Contact contact = new Contact(userId,id,name,phone,status,image);
+                    int unreadMessages;
 
-                    if (mSharedPreferences.contains(userId + "_state") && mSharedPreferences.contains(userId + "_messageList")) {
+                    if (mSharedPreferences.contains(contact.getUserId() + "_state") && mSharedPreferences.contains(contact.getUserId() + "_messageList")) {
                         Gson gson = new Gson();
                         Type typeList = new TypeToken<List<Message>>() {}.getType();
                         String jsonMessageList = mSharedPreferences.getString(userId + "_messageList", "");
-                        List<Message> messageList = gson.fromJson(jsonMessageList, typeList);
+                        messageList = gson.fromJson(jsonMessageList, typeList);
                         contact.setLastMessage(messageList.get(messageList.size()-1));
-                        contact.setUnreadMessages(getUnreadMessages(messageList));
+                        unreadMessages = mSharedPreferences.getInt(contact.getUserId() + "_unreadMessages", 0);
+                        contact.setUnreadMessages(unreadMessages);
 
-                        contactsMap.put(contact.getUserId(), contact);
+
+                    }
+
+                    if (mSharedPreferences.contains(contact.getUserId() + "_unreadMessages")) {
+                        unreadMessages = mSharedPreferences.getInt(contact.getUserId() + "_unreadMessages", 0);
+                        contact.setUnreadMessages(unreadMessages);
                     }
 
                     ref.child(getString(R.string.USERS))
@@ -208,6 +215,10 @@ public class ChatsFragment extends Fragment implements LoaderManager.LoaderCallb
 
                         }
                     });
+
+                    if (messageList.size() > 0)
+                        contact.setLastMessage(messageList.get(messageList.size()-1));
+                    contactsMap.put(contact.getUserId(), contact);
                 }
             }
         }
@@ -249,10 +260,12 @@ public class ChatsFragment extends Fragment implements LoaderManager.LoaderCallb
     private int getUnreadMessages(List<Message> messageList) {
         int unread = 0;
         for (int i = messageList.size()-1; i <= 0; i++) {
-            if (messageList.get(i).getState().equals("unread"))
-                unread++;
-            else
-                break;
+            if (messageList.get(i).getState() != null) {
+                if (messageList.get(i).getState().equals("unread"))
+                    unread++;
+                else
+                    break;
+            }
         }
         return unread;
     }

@@ -111,8 +111,6 @@ public class Message implements Serializable {
                 (splitCurr[5].equals(splitDate[5]));
     }
 
-
-
     public String getState() {
         return state;
     }

@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -54,6 +55,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private Contact mContact;
     private String messageBody;
     private DatabaseReference ref;
+    private static final String MyPREFERENCES = "ContactsPrefs";
+    private SharedPreferences mSharedPreferences;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -92,8 +95,28 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         NotificationManagerCompat mNotifyMgr = NotificationManagerCompat.from(this);
 
+        setContactState();
+
         //mNotifyMgr.notify(Integer.parseInt(mContact.getRawId()), mBuilderGroup.build());
         mNotifyMgr.notify(Integer.parseInt(mContact.getRawId()), mBuilder.build());
+    }
+
+    private void setContactState() {
+        if (mContact != null) {
+            if (mContact.getUserId() != null)
+                mSharedPreferences.edit().putBoolean(mContact.getUserId() + "_state", true).apply();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        DatabaseReference unreadMessages = ref.child(getString(R.string.USERS))
+                .child(mContact.getUserId()).child("Messages")
+                .child(sender_id);
+        Query query = unreadMessages.orderByChild("state").equalTo("unread").limitToFirst(1000);
+        query.keepSynced(true);
+        query.addValueEventListener(readSenderMessagesListener);
     }
 
     private void createSingleChatIntent() {
@@ -129,7 +152,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         DatabaseReference unreadMessages = ref.child(getString(R.string.USERS))
                 .child(mContact.getUserId()).child("Messages")
                 .child(sender_id);
-        Query query = unreadMessages.orderByChild("state").equalTo("read").limitToFirst(1000);
+        Query query = unreadMessages.orderByChild("state").equalTo("unread").limitToFirst(1000);
         query.keepSynced(true);
         query.addValueEventListener(readSenderMessagesListener);
     }
@@ -144,13 +167,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                 if (snapshot.exists() && snapshot.hasChild("state")) {
                     String messageState = snapshot.child("state").getValue().toString();
-                    if (messageState.equals("read")) {
+                    if (messageState.equals("unread")) {
                         String message = snapshot.child("message").getValue().toString();
                         stack.push(message);
                         count++;
                     }
                 }
             }
+            mSharedPreferences.edit().putInt(mContact.getUserId() + "_unreadMessages", count).apply();
             int counter = 0;
             while ((!stack.isEmpty()) && (counter < 7)) {
                 sortStack.push(stack.pop());

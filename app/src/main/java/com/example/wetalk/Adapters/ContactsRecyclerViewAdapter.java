@@ -62,9 +62,11 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
         else {
             holder.tv_name.setText(mContactsList.get(position).getName());
             holder.tv_phone.setText(mContactsList.get(position).getPhone());
-            holder.tv__lastMessageTime.setText(mContactsList.get(position).getLastMessage().getMessageTimeForContactView());
-            holder.tv_lastMessage.setVisibility(View.VISIBLE);
-            holder.tv_lastMessage.setText(mContactsList.get(position).getLastMessage().getMessage());
+            if (mContactsList.get(position).getLastMessage() != null) {
+                holder.tv_lastMessage.setVisibility(View.VISIBLE);
+                holder.tv_lastMessage.setText(mContactsList.get(position).getLastMessage().getMessage());
+                holder.tv__lastMessageTime.setText(mContactsList.get(position).getLastMessage().getMessageTimeForContactView());
+            }
             if (mContactsList.get(position).getUnreadMessages() > 0) {
                 holder.tv_unreadMessages.setText(String.valueOf(mContactsList.get(position).getUnreadMessages()));
                 holder.tv_unreadMessages.setVisibility(View.VISIBLE);
