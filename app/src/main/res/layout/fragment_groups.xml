@@ -9,8 +9,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="end|bottom"
-        >
+        android:gravity="end|bottom">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/create_group_btn"
@@ -18,12 +17,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_margin="20dp"
-            android:src="@drawable/add_group"
-            app:elevation="100dp"
-            app:rippleColor="@android:color/white"
+            app:background="@drawable/btn_ripple_effect"
             android:clickable="true"
-            android:background="@drawable/btn_ripple_effect"
-            android:focusable="true" />
+            android:focusable="true"
+            app:srcCompat="@drawable/ic_group_add_white"
+            app:elevation="100dp"
+            app:rippleColor="@android:color/white"/>
 
     </RelativeLayout>
 

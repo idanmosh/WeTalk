@@ -27,6 +27,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
@@ -34,6 +35,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private final ContentResolver mResolver;
     private Context mContext;
     private DatabaseReference rootRef;
+    private static final Map<String, String> contactsMap = new HashMap<>();
 
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -116,7 +118,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 String image = c.getString(c.getColumnIndex(ContactsContract.Data.DATA5));
                 String status = c.getString(c.getColumnIndex(ContactsContract.Data.DATA6));
 
-                appContactsList.add(new Contact(userId,id,name,phone,status,image));
+                appContactsList.add(new Contact(userId,id,name,phone,status,image,null,0));
             }
         }
         c.close();
@@ -130,8 +132,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         if (dataSnapshot1.exists()) {
 
                             for (int i = 0; i < appContactsList.size(); i++) {
-                                if (!dataSnapshot1.hasChild(generatePhoneNumber(appContactsList.get(i).getPhone())))
+                                if (!dataSnapshot1.hasChild(generatePhoneNumber(appContactsList.get(i).getPhone()))) {
                                     deleteContact(appContactsList.get(i));
+                                    contactsMap.remove(appContactsList.get(i).getUserId());
+                                }
                             }
 
                             /*try {
@@ -158,11 +162,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                                                             tempContactsList.get(i).getUserId()).child(mContext.getString(R.string.IMAGE)).getValue().toString());
                                                 }
 
-                                                if (checkIfContactExist(tempContactsList.get(i))) {
+                                                if ((checkIfContactExist(tempContactsList.get(i))) &&
+                                                        (!contactsMap.containsKey(tempContactsList.get(i).getUserId()))) {
+
                                                     addContact(tempContactsList.get(i));
+                                                    contactsMap.put(tempContactsList.get(i).getUserId(),tempContactsList.get(i).getUserId());
                                                 }
                                                 else if (checkForUpdate(tempContactsList.get(i))) {
                                                     updateContact(tempContactsList.get(i));
+                                                    contactsMap.remove(tempContactsList.get(i).getUserId());
+                                                    contactsMap.put(tempContactsList.get(i).getUserId(),tempContactsList.get(i).getUserId());
                                                 }
                                             }
                                         }

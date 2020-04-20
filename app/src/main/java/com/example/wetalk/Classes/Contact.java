@@ -1,5 +1,7 @@
 package com.example.wetalk.Classes;
 
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 
 public class Contact implements Serializable {
@@ -20,7 +22,7 @@ public class Contact implements Serializable {
         this.setStatus(contact.getStatus());
         this.setRawId((contact.getRawId()));
         this.setUserId(contact.getUserId());
-        this.setUnreadMessages(contact.getUnreadMessages());
+        this.setLastMessage(contact.getLastMessage());
     }
 
     public Contact() {
@@ -31,13 +33,15 @@ public class Contact implements Serializable {
         this.setStatus(null);
     }
 
-    public Contact(String userId, String rawId, String name, String phone, String status, String image) {
+    public Contact(String userId, String rawId, String name, String phone, String status, String image, Message lastMessage, int unreadMessages) {
        this.setRawId(rawId);
        this.setName(name);
        this.setPhone(phone);
        this.setStatus(status);
        this.setImage(image);
        this.setUserId(userId);
+       this.setUnreadMessages(unreadMessages);
+       this.setLastMessage(lastMessage);
     }
 
     public Contact(String name, String phone, String status) {
@@ -48,6 +52,15 @@ public class Contact implements Serializable {
         this.setStatus(status);
     }
 
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        Contact contact = (Contact) obj;
+
+        return (this.name.equals(contact.name)) && (this.userId.equals(contact.userId))
+                && (this.rawId.equals(contact.rawId)) && (this.image == contact.image)
+                && (this.status.equals(contact.status) && (this.unreadMessages == contact.unreadMessages)
+                && (this.phone.equals(contact.phone)) && (this.lastMessage.getMessageId().equals(contact.lastMessage.getMessageId())));
+    }
 
     public String getName() {
         return name;

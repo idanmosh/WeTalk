@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/chat_background"
+    android:background="@color/colorPrimaryDark"
     tools:context=".ChatActivity">
 
 
@@ -76,7 +76,7 @@
 
     <EditText
         android:id="@+id/EditTextMessage"
-        android:layout_width="330dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
@@ -96,14 +96,12 @@
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnSendMessage"
-        android:layout_width="50dp"
+        android:layout_width="wrap_content"
         android:layout_height="50dp"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_gravity="center"
-        android:layout_marginStart="348dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="9dp"
         android:layout_marginBottom="9dp"
         android:background="@drawable/btn_ripple_effect"
         android:backgroundTint="@color/cardview_dark_background"

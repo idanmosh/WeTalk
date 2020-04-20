@@ -14,16 +14,18 @@ public class Message implements Serializable {
     private String from;
     private String message;
     private String type;
+    private String send;
     private String messageId;
     private String state;
 
     public Message() { }
 
-    public Message(String date, String from, String message, String type, String messageId, String state) {
+    public Message(String date, String from, String message, String type, String send, String messageId, String state) {
         this.message = message;
         this.type = type;
         this.from = from;
         this.date = date;
+        this.send = send;
         this.messageId = messageId;
         this.state = state;
     }
@@ -157,5 +159,13 @@ public class Message implements Serializable {
 
     public void setMessageId(String messageId) {
         this.messageId = messageId;
+    }
+
+    public String getSend() {
+        return send;
+    }
+
+    public void setSend(String send) {
+        this.send = send;
     }
 }

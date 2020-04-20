@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.transition.Fade;
-import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -48,7 +47,6 @@ public class TransitionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transition);
 
-        fadeActivity();
         mContactsSharedPreferences = getSharedPreferences(ContactPREFERENCES, MODE_PRIVATE);
         mSharedPreferences = getSharedPreferences(MyPREFERENCES, MODE_PRIVATE);
         AccountManager accountManager = (AccountManager) getSystemService(Context.ACCOUNT_SERVICE);
@@ -106,7 +104,6 @@ public class TransitionActivity extends AppCompatActivity {
             Intent helloIntent = new Intent(TransitionActivity.this, HelloActivity.class);
             helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(helloIntent);
-            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
             finish();
         },WELCOME_TIMEOUT);
     }
@@ -116,7 +113,6 @@ public class TransitionActivity extends AppCompatActivity {
             Intent loginIntent = new Intent(TransitionActivity.this, LoginActivity.class);
             loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(loginIntent);
-            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
             finish();
         },WELCOME_TIMEOUT);
     }
@@ -127,24 +123,8 @@ public class TransitionActivity extends AppCompatActivity {
             Intent mainIntent = new Intent(TransitionActivity.this, MainActivity.class);
             mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(mainIntent);
-            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
             finish();
         },WELCOME_TIMEOUT);
     }
 
-    private void fadeActivity() {
-        Fade fade = new Fade();
-        View decor = getWindow().getDecorView();
-        fade.excludeTarget(decor.findViewById(R.id.main_app_bar), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_page_toolbar), true);
-        fade.excludeTarget(decor.findViewById(R.id.AppBarLayout), true);
-        fade.excludeTarget(decor.findViewById(R.id.main_tabs),true);
-        fade.excludeTarget(decor.findViewById(R.id.settings_page_toolbar),true);
-        fade.excludeTarget(decor.findViewById(R.id.shared_toolbar),true);
-        fade.excludeTarget(android.R.id.statusBarBackground,true);
-        fade.excludeTarget(android.R.id.navigationBarBackground,true);
-
-        getWindow().setEnterTransition(fade);
-        getWindow().setExitTransition(fade);
-    }
 }

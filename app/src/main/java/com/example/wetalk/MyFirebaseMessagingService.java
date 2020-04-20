@@ -28,6 +28,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.TaskStackBuilder;
 
 import com.example.wetalk.Classes.Contact;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -40,11 +41,16 @@ import com.google.firebase.messaging.RemoteMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
+
+    private static final String ContactPREFERENCES = "ContactsPrefs";
+    private SharedPreferences mContactsSharedPreferences;
     private final static String TAG = MyFirebaseMessagingService.class.getSimpleName();
     private String image;
     private String messageTitle;
@@ -55,20 +61,22 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private Contact mContact;
     private String messageBody;
     private DatabaseReference ref;
-    private static final String MyPREFERENCES = "ContactsPrefs";
-    private SharedPreferences mSharedPreferences;
+    private FirebaseAuth mAuth;
+    private String messageId;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-
+        mContactsSharedPreferences = getSharedPreferences(ContactPREFERENCES, MODE_PRIVATE);
+        mAuth = FirebaseAuth.getInstance();
         ref = FirebaseDatabase.getInstance().getReference();
-        sender_id = remoteMessage.getData().getOrDefault("sender_id", "");
+        messageId = remoteMessage.getData().get("message_id");
+        sender_id = remoteMessage.getData().get("sender_id");
         messageTitle = "";
         image = "";
         mResolver = getApplicationContext().getContentResolver();
-        messageBody = remoteMessage.getData().getOrDefault("body", "");
+        messageBody = remoteMessage.getData().get("body");
 
         findSenderDetails();
 
@@ -95,28 +103,23 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         NotificationManagerCompat mNotifyMgr = NotificationManagerCompat.from(this);
 
-        setContactState();
-
         //mNotifyMgr.notify(Integer.parseInt(mContact.getRawId()), mBuilderGroup.build());
         mNotifyMgr.notify(Integer.parseInt(mContact.getRawId()), mBuilder.build());
+        messageSent();
+        setContactState();
     }
 
     private void setContactState() {
-        if (mContact != null) {
-            if (mContact.getUserId() != null)
-                mSharedPreferences.edit().putBoolean(mContact.getUserId() + "_state", true).apply();
-        }
+        mContactsSharedPreferences.edit().putBoolean(mContact.getUserId() + "_state", true).apply();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        DatabaseReference unreadMessages = ref.child(getString(R.string.USERS))
-                .child(mContact.getUserId()).child("Messages")
-                .child(sender_id);
-        Query query = unreadMessages.orderByChild("state").equalTo("unread").limitToFirst(1000);
-        query.keepSynced(true);
-        query.addValueEventListener(readSenderMessagesListener);
+    private void messageSent() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("send", "sent");
+        ref.child(getString(R.string.USERS))
+                .child(sender_id).child("Messages")
+                .child(mAuth.getCurrentUser().getUid())
+                .child(messageId).updateChildren(map).addOnCompleteListener(task -> {});
     }
 
     private void createSingleChatIntent() {
@@ -151,7 +154,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         DatabaseReference unreadMessages = ref.child(getString(R.string.USERS))
                 .child(mContact.getUserId()).child("Messages")
-                .child(sender_id);
+                .child(mAuth.getUid());
         Query query = unreadMessages.orderByChild("state").equalTo("unread").limitToFirst(1000);
         query.keepSynced(true);
         query.addValueEventListener(readSenderMessagesListener);
@@ -174,7 +177,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
             }
-            mSharedPreferences.edit().putInt(mContact.getUserId() + "_unreadMessages", count).apply();
+            mContactsSharedPreferences.edit().putInt(mContact.getUserId() + "_unreadMessages", count).apply();
             int counter = 0;
             while ((!stack.isEmpty()) && (counter < 7)) {
                 sortStack.push(stack.pop());
@@ -231,7 +234,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA1));
                 String userId = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA4));
                 String status = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.DATA6));
-                mContact = new Contact(userId,id,messageTitle,phone,status,image);
+                mContact = new Contact(userId,id,messageTitle,phone,status,image,null,0);
             }
 
             cursor.close();

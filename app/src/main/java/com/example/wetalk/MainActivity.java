@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
                     1);
         }
 
-
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this,
@@ -193,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
         Intent transitionIntent = new Intent(MainActivity.this, TransitionActivity.class);
         transitionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(transitionIntent);
-        overridePendingTransition(new Fade().getMode(), new Fade().getMode());
         finish();
     }
 
