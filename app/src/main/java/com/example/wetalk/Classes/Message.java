@@ -17,10 +17,12 @@ public class Message implements Serializable {
     private String send;
     private String messageId;
     private String state;
+    private String image;
+    private String link;
 
     public Message() { }
 
-    public Message(String date, String from, String message, String type, String send, String messageId, String state) {
+    public Message(String date, String from, String message, String type, String send, String messageId, String state, String image, String link) {
         this.message = message;
         this.type = type;
         this.from = from;
@@ -28,6 +30,8 @@ public class Message implements Serializable {
         this.send = send;
         this.messageId = messageId;
         this.state = state;
+        this.image = image;
+        this.link = link;
     }
 
     public String getMessageTime() {
@@ -167,5 +171,21 @@ public class Message implements Serializable {
 
     public void setSend(String send) {
         this.send = send;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
     }
 }

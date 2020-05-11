@@ -20,6 +20,7 @@ public final class Permissions  {
     public static final int IMAGE_REQUEST = 101;
     public static final int EXTERNAL_REQUEST = 102;
     public static final int CALL_REQUEST = 103;
+    public static final int AUDIO_REQUEST = 104;
 
 
     public static final String READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
@@ -95,6 +96,64 @@ public final class Permissions  {
         }
     }
 
+    public static void audioPermissionDialog(@NonNull Context context, AppCompatActivity activity) {
+        if (checkPermissions(context, READ_STORAGE, WRITE_STORAGE)) {
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To record audio and send audio allow WeTalk to access your " +
+                            "phone microphone and access to write into phone storage.")
+                    .setIcon(R.drawable.camera_permission)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(activity, new String[]{READ_STORAGE,
+                            WRITE_STORAGE,RECORD_AUDIO}, AUDIO_REQUEST))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access phone microphone and write into phone storage," +
+                                " you must confirm the permissions.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+
+            dialog.show();
+        }
+    }
+
+    public static void ImagePermissionDialog(@NonNull Context context, AppCompatActivity activity) {
+        if (checkPermissions(context, READ_STORAGE, WRITE_STORAGE)) {
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To take a photo or select a photo from the gallery" +
+                            ", allow WeTalk to access your camera ,photos, media, and files from your device.")
+                    .setIcon(R.drawable.camera_permission)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(activity, new String[]{READ_STORAGE,WRITE_STORAGE}, IMAGE_REQUEST))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access to camera and media" +
+                                " storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+
+            dialog.show();
+        }
+    }
+
+    public static void ImagePermissionDialog(@NonNull Context context, Fragment fragment) {
+        if (checkPermissions(context, READ_STORAGE, WRITE_STORAGE)) {
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To take a photo or select a photo from the gallery" +
+                            ", allow WeTalk to access your camera ,photos, media, and files from your device.")
+                    .setIcon(R.drawable.camera_permission)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(fragment, new String[]{READ_STORAGE,WRITE_STORAGE}, IMAGE_REQUEST))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access to camera and media" +
+                                " storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+
+            dialog.show();
+        }
+    }
+
     public static void ProfileShareImagePermissionDialog(@NonNull Context context, AppCompatActivity activity) {
         if (checkPermissions(context, READ_STORAGE, WRITE_STORAGE)) {
             MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
@@ -107,6 +166,25 @@ public final class Permissions  {
                     .setNegativeText(R.string.decline)
                     .onNegative((dialog12, which) -> {
                         Toast.makeText(context, "You can't get access to media" +
+                                " storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
+                    })
+                    .setCancelable(false);
+
+            dialog.show();
+        }
+    }
+
+    public static void ProfileImagePermissionDialog(@NonNull Context context, Fragment fragment) {
+        if (checkPermissions(context, READ_STORAGE, CAMERA)) {
+            MaterialStyledDialog.Builder dialog = new MaterialStyledDialog.Builder(context)
+                    .setDescription("To take a photo or select a photo from the gallery" +
+                            ", allow WeTalk to access your camera ,photos, media, and files from your device.")
+                    .setIcon(R.drawable.camera_permission)
+                    .setPositiveText(R.string.continue_btn)
+                    .onPositive((dialog1, which) -> requestPermissions(fragment, new String[]{READ_STORAGE,WRITE_STORAGE,CAMERA}, IMAGE_REQUEST))
+                    .setNegativeText(R.string.decline)
+                    .onNegative((dialog12, which) -> {
+                        Toast.makeText(context, "You can't get access to camera and media" +
                                 " storage, you must confirm the permissions.", Toast.LENGTH_SHORT).show();
                     })
                     .setCancelable(false);

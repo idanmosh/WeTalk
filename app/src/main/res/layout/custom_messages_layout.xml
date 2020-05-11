@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/message_profile_image"
@@ -12,6 +12,208 @@
         android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
         android:src="@drawable/profile_image" />
+
+    <LinearLayout
+        android:id="@+id/sender_audio_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/message_profile_image"
+        android:background="@drawable/receiver_messages_layout"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_alignParentEnd="true"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <me.jagar.chatvoiceplayerlibrary.VoicePlayerView
+            android:id="@+id/sender_voicePlayerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:playPauseBackgroundColor="@android:color/black"
+            app:seekBarProgressColor="#000"
+            app:showShareButton="false"
+            app:playPauseCornerRadius="100"
+            app:showTiming="true"
+            app:viewCornerRadius="10"
+            app:viewBackground="@android:color/white"
+            app:progressTimeColor="@android:color/darker_gray"
+            app:seekBarThumbColor="@android:color/black"
+            app:playProgressbarColor="@android:color/black" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start">
+
+            <ImageView
+                android:id="@+id/sender_check_image_audio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_check_gray"
+                android:padding="4dp"/>
+
+            <TextView
+                android:id="@+id/sender_time_audio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="time"
+                android:textSize="11sp"
+                android:textColor="#808080"
+                android:layout_margin="2dp"
+                android:textStyle="bold"
+                tools:ignore="SmallSp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sender_doc_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/message_profile_image"
+        android:background="@drawable/receiver_messages_layout"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_alignParentEnd="true"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/sender_doc"
+            android:layout_gravity="center"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_margin="5dp"
+            android:background="@android:color/black"
+            android:scaleType="center"
+            android:clickable="true"
+            android:src="@drawable/ic_insert_drive_file_gray"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/sender_doc_name_txt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="doc name"
+            android:layout_margin="4dp"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            tools:ignore="RtlSymmetry" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/sender_check_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/sender_check_image_doc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_check_gray"
+                    android:padding="4dp"/>
+
+                <TextView
+                    android:id="@+id/sender_time_doc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="time"
+                    android:textSize="11sp"
+                    android:textColor="#808080"
+                    android:layout_margin="2dp"
+                    android:textStyle="bold"
+                    tools:ignore="SmallSp" />
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/sender_type_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textColor="#808080"
+                    android:padding="4dp"
+                    android:textStyle="bold"
+                    tools:ignore="SmallSp"
+                    android:text="type"
+                    />
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sender_image_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/message_profile_image"
+        android:background="@drawable/receiver_messages_layout"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_alignParentEnd="true"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/sender_image"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_margin="5dp"
+            android:scaleType="fitXY"
+            android:clickable="true"
+            android:src="@drawable/ic_image_black"
+            android:focusable="true" />
+
+        <TextView
+            android:layout_gravity="end"
+            android:id="@+id/sender_message_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="message"
+            android:padding="5dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start">
+
+            <ImageView
+                android:id="@+id/sender_check_image_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_check_gray"
+                android:padding="4dp"/>
+
+            <TextView
+                android:id="@+id/sender_time_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="time"
+                android:textSize="11sp"
+                android:textColor="#808080"
+                android:layout_margin="2dp"
+                android:textStyle="bold"
+                tools:ignore="SmallSp" />
+        </LinearLayout>
+
+    </LinearLayout>
     
     <LinearLayout
         android:id="@+id/sender_layout"
@@ -22,7 +224,8 @@
         android:layout_marginTop="10dp"
         android:layout_marginEnd="10dp"
         android:layout_marginStart="10dp"
-        android:layout_alignParentEnd="true">
+        android:layout_alignParentEnd="true"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -61,6 +264,253 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/receiver_audio_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_toEndOf="@+id/message_profile_image"
+        android:layout_alignParentTop="@+id/sender_layout"
+        android:background="@drawable/sender_messages_layout"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <me.jagar.chatvoiceplayerlibrary.VoicePlayerView
+            android:id="@+id/receiver_voicePlayerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:playPauseBackgroundColor="@android:color/darker_gray"
+            app:seekBarProgressColor="@android:color/white"
+            app:showShareButton="false"
+            app:playPauseCornerRadius="100"
+            app:showTiming="true"
+            app:viewCornerRadius="10"
+            app:viewBackground="@android:color/black"
+            app:progressTimeColor="@android:color/white"
+            app:seekBarThumbColor="@android:color/white"
+            app:playProgressbarColor="@android:color/white" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end">
+
+            <TextView
+                android:id="@+id/receiver_time_audio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="time"
+                android:textSize="11sp"
+                android:paddingStart="6dp"
+                android:textColor="@android:color/white"
+                android:padding="4dp"
+                android:textStyle="bold"
+                tools:ignore="SmallSp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/receiver_doc_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_toEndOf="@+id/message_profile_image"
+        android:layout_alignParentTop="@+id/sender_layout"
+        android:background="@drawable/sender_messages_layout"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <RelativeLayout
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:layout_margin="5dp">
+
+            <RelativeLayout
+                android:id="@+id/progress_bar_layout_Doc"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:elevation="200dp">
+
+                <ProgressBar
+                    android:id="@+id/doc_download_progress_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:elevation="200dp"
+                    android:max="100"
+                    android:progress="0"/>
+            </RelativeLayout>
+
+            <ImageView
+                android:layout_gravity="center"
+                android:id="@+id/receiver_doc"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/white"
+                android:scaleType="center"
+                android:clickable="true"
+                android:src="@drawable/ic_insert_drive_file_gray"
+                android:focusable="true" />
+
+            <ImageView
+                android:layout_gravity="center"
+                android:id="@+id/receiver_doc_download"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/white"
+                android:scaleType="center"
+                android:clickable="true"
+                android:src="@drawable/ic_file_download_gray"
+                android:focusable="true" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/receiver_doc_name_txt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="doc name"
+            android:layout_margin="4dp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            tools:ignore="RtlSymmetry" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/receiver_check_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/receiver_type_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textColor="@android:color/white"
+                    android:padding="4dp"
+                    android:textStyle="bold"
+                    tools:ignore="SmallSp"
+                    android:text="type" />
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/receiver_time_doc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="time"
+                    android:textSize="11sp"
+                    android:textColor="@android:color/white"
+                    android:padding="4dp"
+                    android:textStyle="bold"
+                    tools:ignore="SmallSp" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/receiver_image_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_toEndOf="@+id/message_profile_image"
+        android:layout_alignParentTop="@+id/sender_layout"
+        android:background="@drawable/sender_messages_layout"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <RelativeLayout
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_margin="5dp">
+
+            <RelativeLayout
+                android:id="@+id/progress_bar_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:elevation="200dp">
+
+                <ProgressBar
+                    android:id="@+id/image_download_progress_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:elevation="200dp"
+                    android:max="100"
+                    android:progress="0"/>
+            </RelativeLayout>
+
+            <ImageView
+                android:id="@+id/receiver_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_image_white"
+                android:clickable="true"
+                android:elevation="0dp"
+                android:focusable="true" />
+
+            <ImageView
+                android:id="@+id/receiver_image_blur"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="center"
+                android:src="@drawable/ic_file_download"
+                android:clickable="true"
+                android:elevation="0dp"
+                android:focusable="true" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:layout_gravity="end"
+            android:id="@+id/receiver_message_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="message"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end">
+
+            <TextView
+                android:id="@+id/receiver_time_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="time"
+                android:textSize="11sp"
+                android:paddingStart="6dp"
+                android:textColor="@android:color/white"
+                android:padding="4dp"
+                android:textStyle="bold"
+                tools:ignore="SmallSp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/receiver_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -68,7 +518,8 @@
         android:layout_marginEnd="10dp"
         android:layout_toEndOf="@+id/message_profile_image"
         android:layout_alignParentTop="@+id/sender_layout"
-        android:background="@drawable/sender_messages_layout">
+        android:background="@drawable/sender_messages_layout"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="wrap_content"

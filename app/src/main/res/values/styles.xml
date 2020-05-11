@@ -17,14 +17,13 @@
         <item name="android:textColor">@color/colorRed</item>
     </style>
 
-
     <style name="AppThemeChat" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:itemBackground">@color/colorMenu</item>
-        <item name="android:textColor">@color/colorMenu</item>
+        <item name="android:textColor">@color/textColor</item>
         <item name="android:colorForeground">@color/foreground_material_dark</item>
         <item name="android:textColorPrimaryDisableOnly">@color/abc_primary_text_disable_only_material_dark</item>
         <item name="android:textColorSecondary">@color/colorMenu</item>

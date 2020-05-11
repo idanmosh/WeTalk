@@ -209,6 +209,7 @@ public class ChatsFragment extends Fragment implements ContactsRecyclerViewAdapt
                                                     contactsList.addAll(contactsMap.values());
                                                     contactsRecyclerViewAdapter.notifyDataSetChanged();
                                                 }
+
                                             }
                                         }
                                         @Override
@@ -225,6 +226,7 @@ public class ChatsFragment extends Fragment implements ContactsRecyclerViewAdapt
 
                         }
                     }
+                    c.close();
                 });
                 try {
                     Thread.sleep(1000);
@@ -233,7 +235,6 @@ public class ChatsFragment extends Fragment implements ContactsRecyclerViewAdapt
                 }
             }
         }
-
 
         public boolean isStop() {
             return stop;

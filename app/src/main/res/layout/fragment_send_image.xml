@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:elevation="200dp"
+    android:background="@android:color/background_dark"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".SendImageFragment">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/send_image_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="200dp"
+        android:background="@android:color/background_dark"
+        android:theme="@style/AppThemeChat"/>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="200dp"
+        android:layout_gravity="center"
+        android:gravity="center">
+
+        <ProgressBar
+            android:elevation="200dp"
+            android:id="@+id/image_progressbar"
+            android:layout_width="120dp"
+            android:indeterminateTint="@color/colorPrimary"
+            android:layout_height="120dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/send_image_task_percent"
+            android:gravity="center"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:elevation="200dp"
+            android:textColor="@color/colorPrimary"
+            android:textSize="30sp"
+            android:text="0%"
+            android:visibility="gone"/>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/send_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:scaleType="fitXY"
+        android:src="@drawable/profile_image" />
+
+    <RelativeLayout
+        android:id="@+id/text_message_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:elevation="200dp">
+
+        <EditText
+            android:id="@+id/EditTextImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="13dp"
+            android:background="@drawable/edit_round"
+            android:hint="@string/messageHint"
+            android:inputType="textMultiLine"
+            android:maxLines="6"
+            android:padding="10dp"
+            android:scrollbars="vertical"
+            android:textDirection="rtl"
+            android:textSize="15sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:elevation="200dp">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnSendImage"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginEnd="9dp"
+            android:layout_marginBottom="9dp"
+            android:background="@drawable/btn_ripple_effect"
+            android:backgroundTint="@color/cardview_dark_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_send_white"
+            app:fabCustomSize="50dp"
+            app:rippleColor="@android:color/white" />
+
+    </RelativeLayout>
+
+</FrameLayout>

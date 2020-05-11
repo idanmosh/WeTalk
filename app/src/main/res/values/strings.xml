@@ -89,4 +89,9 @@
     <string name="CONTACTS">Contacts</string>
     <string name="channel_name">התראות הודעה</string>
     <string name="channel_description">CHANNEL_DESC</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="send">שלח</string>
+    <string name="cancel">ביטול</string>
 </resources>

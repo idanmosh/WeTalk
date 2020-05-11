@@ -7,8 +7,6 @@
     android:background="@android:color/background_dark"
     tools:context=".Settings.ProfileImageActivity">
 
-
-
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/shared_toolbar"
         android:layout_width="match_parent"

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.transition.Fade;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -91,9 +90,10 @@ public class TransitionActivity extends AppCompatActivity {
         new Handler().postDelayed(() -> {
             Intent helloIntent = new Intent(TransitionActivity.this, ProfileActivity.class);
             helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
             startActivity(helloIntent);
-            overridePendingTransition(new Fade().getMode(), new Fade().getMode());
             finish();
+            overridePendingTransition(0, R.anim.fade_out);
         },WELCOME_TIMEOUT);
     }
 
@@ -103,8 +103,10 @@ public class TransitionActivity extends AppCompatActivity {
         new Handler().postDelayed(() -> {
             Intent helloIntent = new Intent(TransitionActivity.this, HelloActivity.class);
             helloIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
             startActivity(helloIntent);
             finish();
+            overridePendingTransition(0, R.anim.fade_out);
         },WELCOME_TIMEOUT);
     }
 
@@ -112,18 +114,20 @@ public class TransitionActivity extends AppCompatActivity {
         new Handler().postDelayed(() -> {
             Intent loginIntent = new Intent(TransitionActivity.this, LoginActivity.class);
             loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            overridePendingTransition(R.anim.fade_out, R.anim.fade_out);
             startActivity(loginIntent);
             finish();
+            overridePendingTransition(0, R.anim.fade_out);
         },WELCOME_TIMEOUT);
     }
 
     private void sendUserToMainActivity() {
-
         new Handler().postDelayed(() -> {
             Intent mainIntent = new Intent(TransitionActivity.this, MainActivity.class);
             mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(mainIntent);
             finish();
+            overridePendingTransition(0, R.anim.fade_out);
         },WELCOME_TIMEOUT);
     }
 

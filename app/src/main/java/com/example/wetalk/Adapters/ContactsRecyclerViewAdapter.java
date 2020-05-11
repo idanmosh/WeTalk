@@ -118,7 +118,7 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
         }
     }
 
-    public interface ListItemClickListener{
+    public interface ListItemClickListener {
         void onItemClick(int position);
     }
 }

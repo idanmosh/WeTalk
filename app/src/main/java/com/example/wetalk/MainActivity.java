@@ -23,6 +23,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.example.wetalk.Adapters.TabsAccessorAdapter;
 import com.example.wetalk.Calling.Sinch;
+import com.example.wetalk.Classes.AppDir;
+import com.example.wetalk.Permissions.Permissions;
 import com.example.wetalk.Settings.SettingsActivity;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private StorageReference userProfileImageRef;
     private DatabaseReference rootRef;
+    private AppDir appDir;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +138,13 @@ public class MainActivity extends AppCompatActivity {
         loadingBar = new ProgressDialog(this);
         mTabLayout = findViewById(R.id.main_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!Permissions.checkPermissions(this, Permissions.READ_STORAGE, Permissions.WRITE_STORAGE))
+            appDir = new AppDir();
     }
 
     @Override

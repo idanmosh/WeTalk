@@ -3,15 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/activity_chat_layout"
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
     tools:context=".ChatActivity">
 
-
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbarContact"
         android:layout_width="match_parent"
-        android:layout_height="61dp"
+        android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
         android:theme="@style/AppThemeChat"
@@ -19,8 +19,103 @@
         app:layout_constraintHorizontal_bias="0.327"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-
     </androidx.appcompat.widget.Toolbar>
+
+    <io.codetail.widget.RevealFrameLayout
+        android:elevation="100dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="?attr/actionBarSize">
+
+        <LinearLayout
+            android:id="@+id/reveal_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:id="@+id/gallery_wrapper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/gallery_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_image_black"
+                    app:fabCustomSize="50dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:rippleColor="@android:color/white"/>
+
+                <TextView
+                    android:id="@+id/gallery_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="גלריה"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/docs_wrapper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/docs_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_docs"
+                    app:fabCustomSize="50dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:rippleColor="@android:color/white"/>
+
+                <TextView
+                    android:id="@+id/docs_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="מסמך"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/audio_wrapper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/audio_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_mic_none"
+                    app:fabCustomSize="50dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:rippleColor="@android:color/white"/>
+
+                <TextView
+                    android:id="@+id/audio_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="שמע"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </io.codetail.widget.RevealFrameLayout>
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/contactImage"
@@ -36,9 +131,9 @@
         android:layout_marginBottom="4dp"
         android:clickable="true"
         android:focusable="true"
+        android:elevation="300dp"
         android:foreground="@drawable/image_ripple_effect"
         android:src="@drawable/profile_image"
-        android:transitionName="shared_profile_image"
         app:civ_border_color="#FF000000"
         app:civ_border_width="1dp"
         app:layout_constraintBottom_toBottomOf="@+id/toolbarContact"
@@ -53,10 +148,11 @@
         android:layout_alignBottom="@+id/toolbarContact"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="21dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="122dp"
         android:layout_marginBottom="21dp"
         android:text="name"
+        android:elevation="300dp"
         android:textColor="@color/colorMenu"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -74,6 +170,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbarContact" />
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center">
+
+        <ProgressBar
+            android:elevation="200dp"
+            android:id="@+id/audio_progressbar"
+            android:layout_width="120dp"
+            android:indeterminateTint="@color/colorPrimary"
+            android:layout_height="120dp"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/send_audio_task_percent"
+            android:gravity="center"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:elevation="200dp"
+            android:textColor="@color/colorPrimary"
+            android:textSize="30sp"
+            android:text="0%"
+            android:visibility="gone"/>
+    </RelativeLayout>
+
     <EditText
         android:id="@+id/EditTextMessage"
         android:layout_width="wrap_content"
@@ -81,7 +202,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
         android:layout_gravity="center"
-        android:layout_marginStart="9dp"
+        android:layout_marginStart="10dp"
         android:layout_marginEnd="11dp"
         android:layout_marginBottom="13dp"
         android:background="@drawable/edit_round"
@@ -108,14 +229,30 @@
         android:clickable="true"
         android:focusable="true"
         android:src="@drawable/ic_send_white"
-        app:elevation="100dp"
         app:fabCustomSize="50dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbarContact"
         app:rippleColor="@android:color/white" />
 
-
-
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnSendAudioMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="center"
+        android:layout_marginEnd="9dp"
+        android:layout_marginBottom="9dp"
+        android:background="@drawable/btn_ripple_effect"
+        android:backgroundTint="@color/cardview_dark_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/ic_mic_white"
+        app:fabCustomSize="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbarContact"
+        app:rippleColor="@android:color/white" />
 
 </RelativeLayout>

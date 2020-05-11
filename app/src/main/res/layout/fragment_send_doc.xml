@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:elevation="200dp"
+    android:background="@android:color/background_dark"
+    tools:context=".SendDocFragment">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/send_doc_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="200dp"
+        android:background="@android:color/background_dark"
+        android:theme="@style/AppThemeChat"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="200dp"
+        android:padding="10dp"
+        android:gravity="center"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="200dp">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_insert_drive_file"
+                android:layout_margin="5dp"/>
+
+            <ProgressBar
+                android:elevation="200dp"
+                android:id="@+id/image_progressbar"
+                android:layout_width="120dp"
+                android:indeterminateTint="@color/colorPrimary"
+                android:layout_height="120dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/send_doc_task_percent"
+                android:gravity="center"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:elevation="200dp"
+                android:textColor="@color/colorPrimary"
+                android:textSize="30sp"
+                android:text="0%"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/doc_name"
+            android:layout_width="wrap_content"
+            android:padding="5dp"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_gravity="center"
+            android:text="file name"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_gravity="center"
+            android:id="@+id/btnSendDoc"
+            android:layout_width="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_height="50dp"
+            android:background="@drawable/btn_ripple_effect"
+            android:backgroundTint="@color/cardview_dark_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_send_white"
+            app:fabCustomSize="50dp"
+            app:rippleColor="@android:color/white" />
+
+    </LinearLayout>
+
+</FrameLayout>

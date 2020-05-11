@@ -15,23 +15,26 @@
     <item
         android:id="@+id/video_contact"
         android:title="@string/create_video_call"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         android:icon="@drawable/ic_videocam_white"/>
     <item
         android:id="@+id/call_contact"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         android:title="@string/create_call"
         android:icon="@drawable/ic_phone_white"/>
     <item
         android:id="@+id/DeleteMessage"
-        app:showAsAction="ifRoom"
-        android:title="@string/delete_all_message"
-        android:icon="@drawable/ic_phone_white"/>
+        app:showAsAction="never"
+        android:title="@string/delete_all_message" />
+    <item
+        android:id="@+id/send_media"
+        app:showAsAction="always"
+        android:title="send media"
+        android:icon="@drawable/ic_attach_file"/>
     <item
     android:id="@+id/Block_user"
-    app:showAsAction="ifRoom"
-    android:title="@string/block_contact"
-    android:icon="@drawable/ic_phone_white"/>
+    app:showAsAction="never"
+    android:title="@string/block_contact" />
 
 
 
